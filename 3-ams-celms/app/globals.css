@@ -1,26 +1,44 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* 3-AMS-CELMS brand colors — unchanged */
+  --color-background: #f2f2f2; /* Light background */
+  --color-primary: #014987;
+  --color-primary-hover: #236aa9;
+  --color-secondary: #990a58;
+  --color-secondary-hover: #660033;
+  --color-text-primary: #1f2937; /* Tailwind gray-900 */
+  --color-text-secondary: #4b5563; /* Tailwind gray-700 */
+
+  /* Font stack for corporate/business site */
+  --font-sans: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono: 'Fira Code', monospace;
 }
 
+/* Optional theme mapping (inline theme support) */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --background: var(--color-background);
+  --foreground: var(--color-text-primary);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 }
 
+/* Dark mode support — colors unchanged except text for readability */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --color-background: #f2f2f2;
+    --color-primary: #236aa9;
+    --color-primary-hover: #014987;
+    --color-secondary: #660033;
+    --color-secondary-hover: #990a58;
+    --color-text-primary: #ededed;
+    /* --color-text-secondary: #d1d5db; */
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.5;
 }
