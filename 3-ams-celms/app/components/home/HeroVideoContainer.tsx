@@ -1,4 +1,3 @@
-// File: app/components/home/HeroVideoContainer.tsx
 "use client";
 
 import React, { useEffect } from "react";
@@ -41,8 +40,9 @@ export default function HeroVideoContainer({
         className="absolute top-0 left-0 w-full h-full object-cover"
       />
 
-      {/* Animated overlay */}
+      {/* Animated overlay keyed to currentIndex to trigger animations */}
       <AnimatedTextOverlay
+        key={currentIndex} // forces remount on video change
         headline={currentVideo.headline}
         subtext={currentVideo.subtext}
         ctaText={currentVideo.ctaText}
