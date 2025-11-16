@@ -7,6 +7,7 @@ import WhoWeAreSection from "@/app/components/home/WhoWeAreSection"; // import t
 import CompetitiveAdvantageSection from "./components/home/CompetitiveAdvantageSection";
 import PartnershipsSection from "./components/home/PartnershipsSection";
 import QuoteSection from "./components/home/QuoteSection";
+import PartnerWithUsSection from "./components/home/PartnerWithUsSection";
 
 export default function HomePage() {
   return (
@@ -18,6 +19,7 @@ export default function HomePage() {
       <WhoWeAreSection />
       <CompetitiveAdvantageSection />
       <PartnershipsSection />
+      <PartnerWithUsSection />
       <QuoteSection />
 
       {/* You can add more sections here, e.g., Testimonials, Partners, etc. */}

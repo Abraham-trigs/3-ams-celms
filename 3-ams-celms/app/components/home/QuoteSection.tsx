@@ -1,10 +1,29 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
 export default function QuoteSection() {
+  const fullQuote =
+    "In flying, I have learned that carelessness and overconfidence are usually far more dangerous than deliberately accepted risks.";
+
+  const [displayedChars, setDisplayedChars] = useState<string>("");
+  const [typingDone, setTypingDone] = useState<boolean>(false);
+
+  useEffect(() => {
+    let index = 0;
+    const interval = setInterval(() => {
+      setDisplayedChars(fullQuote.slice(0, index + 1));
+      index++;
+      if (index === fullQuote.length) {
+        clearInterval(interval);
+        setTypingDone(true);
+      }
+    }, 50); // typing speed per character
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <section className="w-full bg-[var(--color-primary)] py-20 flex justify-center">
       {/* Centered container */}
@@ -15,27 +34,42 @@ export default function QuoteSection() {
         viewport={{ once: true }}
         variants={{
           hidden: {},
-          visible: {
-            transition: { staggerChildren: 0.3 }, // staggered effect
-          },
+          visible: { transition: { staggerChildren: 0.3 } },
         }}
       >
-        {/* Quote text */}
+        {/* Quote text with typing effect */}
         <motion.div
-          className="md:w-1/2 flex flex-col justify-center"
+          className="md:w-1/2 flex flex-col justify-center relative"
           variants={{
             hidden: { opacity: 0, x: -50 },
             visible: { opacity: 1, x: 0 },
           }}
           transition={{ duration: 0.8 }}
         >
-          <p className=" md:text-2xl  italic text-[var(--color-background)] mb-4">
-            “In flying, I have learned that carelessness and overconfidence are
-            usually far more dangerous than deliberately accepted risks.”
+          {/* Quotation marks on top */}
+          {/* <div className="text-[var(--color-background)] text-6xl mb-2 leading-none">
+            ""
+          </div> */}
+
+          <p className="md:text-2xl italic text-[var(--color-background)] mb-4 relative inline-block">
+            <span>{displayedChars}</span>
+            {/* Blinking cursor */}
+            {!typingDone && (
+              <span className="inline-block w-[2px] h-6 bg-[var(--color-background)] ml-1 animate-blink" />
+            )}
           </p>
-          <p className="text-lg md:text-xl font-medium text-[var(--color-background)]">
-            — Wilbur Wright, Aviation Pioneer & Pilot
-          </p>
+
+          {/* Signature appears after typing finishes */}
+          {typingDone && (
+            <motion.p
+              className="text-lg md:text-xl font-medium text-[var(--color-background)] mt-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8 }}
+            >
+              — Wilbur Wright
+            </motion.p>
+          )}
         </motion.div>
 
         {/* Quote image */}
@@ -62,20 +96,23 @@ export default function QuoteSection() {
 
 /*
 Design reasoning:
-- Background set to `--color-primary` to make the quote section stand out.
-- Text color changed to `--color-background` for high contrast and readability.
-- Staggered animation keeps entrance dynamic and professional.
+- Added two large quotation marks above the quote as a visual accent.
+- Letter-by-letter typing effect with blinking cursor maintains realistic typing feel.
+- Signature appears after typing finishes.
+- Background `--color-primary` and text `--color-background` ensure strong contrast.
 
 Structure:
-- Full-width section with vertical padding.
-- Inner motion.div handles staggered animation.
-- Flex layout keeps text and image responsive and aligned.
+- Outer section: full-width background.
+- Inner motion.div: handles staggered animation.
+- Left: visual quotes, animated typing quote, and delayed signature.
+- Right: responsive image visual.
 
 Implementation guidance:
-- Adjust `staggerChildren` or `duration` for faster/slower effect.
-- Text remains readable on different screen sizes.
+- Adjust `text-6xl` or `mb-2` to change quotation mark size and spacing.
+- Typing speed adjustable via interval (currently 50ms per character).
+- Ensure `.animate-blink` CSS is included.
 
 Scalability insight:
-- Staggered animation and container pattern reusable for other sections.
-- Background color can be easily changed via CSS variable.
+- Top quotation mark accent reusable for other quote sections.
+- Typing + cursor pattern and delayed signature can be applied to multiple quotes dynamically.
 */
