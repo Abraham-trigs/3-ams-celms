@@ -3,6 +3,7 @@
 
 import React from "react";
 import HeroVideoContainer from "@/app/components/home/HeroVideoContainer";
+import WhoWeAreSection from "@/app/components/home/WhoWeAreSection"; // import the new section
 
 export default function HomePage() {
   return (
@@ -10,7 +11,10 @@ export default function HomePage() {
       {/* Hero section */}
       <HeroVideoContainer duration={7000} />
 
-      {/* Other sections: Services grid, About, etc. */}
+      {/* Who We Are + Our Areas section */}
+      <WhoWeAreSection />
+
+      {/* You can add more sections here, e.g., Testimonials, Partners, etc. */}
     </div>
   );
 }
