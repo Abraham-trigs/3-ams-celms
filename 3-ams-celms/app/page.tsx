@@ -18,8 +18,9 @@ export default function HomePage() {
       {/* Who We Are + Our Areas section */}
       <WhoWeAreSection />
       <CompetitiveAdvantageSection />
-      <PartnershipsSection />
       <PartnerWithUsSection />
+
+      <PartnershipsSection />
       <QuoteSection />
 
       {/* You can add more sections here, e.g., Testimonials, Partners, etc. */}
