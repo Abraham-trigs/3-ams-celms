@@ -28,7 +28,7 @@ export default function QuoteSection() {
     <section className="w-full bg-[var(--color-primary)] py-20 flex justify-center">
       {/* Centered container */}
       <motion.div
-        className="max-w-6xl w-full flex flex-col md:flex-row items-center justify-center gap-8 px-6 md:px-12"
+        className="max-w-6xl  w-full flex flex-col md:flex-row items-center justify-center gap-8 px-6 md:px-12 shadow-lg"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
@@ -46,11 +46,6 @@ export default function QuoteSection() {
           }}
           transition={{ duration: 0.8 }}
         >
-          {/* Quotation marks on top */}
-          {/* <div className="text-[var(--color-background)] text-6xl mb-2 leading-none">
-            ""
-          </div> */}
-
           <p className="md:text-2xl italic text-[var(--color-background)] mb-4 relative inline-block">
             <span>{displayedChars}</span>
             {/* Blinking cursor */}

@@ -8,6 +8,7 @@ import CompetitiveAdvantageSection from "./components/home/CompetitiveAdvantageS
 import PartnershipsSection from "./components/home/PartnershipsSection";
 import QuoteSection from "./components/home/QuoteSection";
 import PartnerWithUsSection from "./components/home/PartnerWithUsSection";
+import ProductsSection from "./components/home/ProductsSection";
 
 export default function HomePage() {
   return (
@@ -22,6 +23,7 @@ export default function HomePage() {
 
       <PartnershipsSection />
       <QuoteSection />
+      <ProductsSection />
 
       {/* You can add more sections here, e.g., Testimonials, Partners, etc. */}
     </div>

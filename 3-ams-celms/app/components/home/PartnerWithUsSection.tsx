@@ -6,7 +6,7 @@ import Link from "next/link";
 
 export default function PartnerWithUsSection() {
   return (
-    <section className="w-full bg-[var(--color-background)] py-20 flex justify-center">
+    <section className="w-full py-20 flex justify-center">
       {/* Centered container */}
       <div className="max-w-6xl w-full flex flex-col md:flex-row items-center justify-between gap-12 px-6 md:px-12">
         {/* Left: Heading */}

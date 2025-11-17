@@ -132,7 +132,8 @@ export default function WhoWeAreSection() {
           <div className="h-[2px] w-full bg-[var(--color-primary)]"></div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Flex container for cards */}
+        <div className="flex flex-wrap gap-8 justify-center">
           {ourAreas.map((area, index) => (
             <motion.div
               key={index}
@@ -140,7 +141,12 @@ export default function WhoWeAreSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: index * 0.2 }}
-              className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center text-center hover:shadow-2xl transition-shadow"
+              className="
+        bg-white rounded-xl shadow-lg p-6 flex flex-col items-center text-center
+        hover:shadow-2xl transition-shadow
+        flex-[1_1_calc(50%-1rem)] min-w-[220px] 
+        lg:flex-[1_1_calc(20%-1rem)]
+      "
             >
               <Image
                 src={area.icon}
