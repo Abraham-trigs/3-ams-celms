@@ -1,10 +1,11 @@
 // File: app/components/home/Header.tsx
-// Purpose: Main site navigation for 3-AMS-CELMS with dropdown using Next.js Link for internal navigation and Framer Motion animation
+// Purpose: Main site navigation for 3-AMS-CELMS with dropdown using Next.js Link, Framer Motion animation, and active link highlight
 
 "use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   FaFacebook,
   FaTwitter,
@@ -15,7 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const menuItems = [
   { label: "Home", href: "/" },
-  { label: "About us", href: "/#about" },
+  { label: "About us", href: "/about" },
   { label: "Our areas", href: "/#areas" },
   {
     label: "Our products & services",
@@ -32,10 +33,18 @@ const menuItems = [
 
 export default function Header() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const pathname = usePathname(); // current route
 
   const toggleDropdown = (label: string) => {
     setOpenDropdown(openDropdown === label ? null : label);
   };
+
+  const linkClasses = (href: string) =>
+    `relative pb-1 transition-all ${
+      pathname === href
+        ? "after:absolute after:left-0 after:bottom-0.5 after:h-[2px] after:w-full after:bg-[var(--color-secondary)] after:content-['']"
+        : "hover:after:absolute hover:after:left-0 hover:after:bottom-0.5 hover:after:h-[2px] hover:after:w-full hover:after:bg-[var(--color-secondary)] hover:after:content-['']"
+    }`;
 
   return (
     <header className="w-full bg-[var(--color-primary)] text-white relative z-50">
@@ -48,7 +57,11 @@ export default function Header() {
                 <>
                   <button
                     onClick={() => toggleDropdown(item.label)}
-                    className="flex items-center space-x-1 relative pb-1 hover:after:absolute hover:after:left-0 hover:after:bottom-0.5 hover:after:h-[2px] hover:after:w-full hover:after:bg-[var(--color-secondary)] hover:after:content-[''] transition-all"
+                    className={`flex items-center space-x-1 relative pb-1 ${
+                      pathname === item.href
+                        ? 'after:absolute after:left-0 after:bottom-0.5 after:h-[2px] after:w-full after:bg-[var(--color-secondary)] after:content-[""]'
+                        : ""
+                    }`}
                   >
                     <span>{item.label}</span>
                     <FaChevronDown size={12} />
@@ -68,7 +81,7 @@ export default function Header() {
                           <li key={sub.label}>
                             <Link
                               href={sub.href}
-                              className="block px-4 py-2 hover:bg-gray-100"
+                              className={linkClasses(sub.href)}
                             >
                               {sub.label}
                             </Link>
@@ -79,10 +92,7 @@ export default function Header() {
                   </AnimatePresence>
                 </>
               ) : (
-                <Link
-                  href={item.href}
-                  className="relative pb-1 hover:after:absolute hover:after:left-0 hover:after:bottom-0.5 hover:after:h-[2px] hover:after:w-full hover:after:bg-[var(--color-secondary)] hover:after:content-[''] transition-all"
-                >
+                <Link href={item.href} className={linkClasses(item.href)}>
                   {item.label}
                 </Link>
               )}
@@ -127,19 +137,20 @@ export default function Header() {
 
 /*
 Design reasoning:
-- Internal links now use Next.js Link for client-side navigation, preventing full page reload.
-- Dropdown items also use Link for internal pages.
-- External social links remain <a> tags for proper behavior.
+- Highlights active link based on current pathname, preserving hover underline for others.
+- Dropdown items use same logic for active state.
+- Improves navigation clarity and consistent UX for users.
 
 Structure:
 - Center: Navigation menu with optional dropdowns using motion.ul
 - Right: Social media icons
 
 Implementation guidance:
-- Adjust hrefs to match actual internal routes.
-- Framer Motion handles smooth dropdown animations; Link preserves SPA behavior.
+- Ensure hrefs match actual routes for active detection.
+- usePathname() enables SPA-style active link highlighting.
+- Framer Motion handles smooth dropdown animations.
 
 Scalability insight:
-- Easily extendable with nested dropdowns or multi-level menus using the same pattern.
-- Client-side routing ensures consistent UX for all internal pages.
+- Active link logic works for multi-level dropdowns.
+- Can extend to highlight parent dropdown if a child page is active.
 */
