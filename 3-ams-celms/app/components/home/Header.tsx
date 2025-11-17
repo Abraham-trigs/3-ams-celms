@@ -1,9 +1,10 @@
 // File: app/components/home/Header.tsx
-// Purpose: Main site navigation for 3-AMS-CELMS with dropdown for "Our products & services" and Framer Motion animation
+// Purpose: Main site navigation for 3-AMS-CELMS with dropdown using Next.js Link for internal navigation and Framer Motion animation
 
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import {
   FaFacebook,
   FaTwitter,
@@ -13,20 +14,20 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 
 const menuItems = [
-  { label: "Home", href: "#" },
-  { label: "About us", href: "#" },
-  { label: "Our areas", href: "#" },
+  { label: "Home", href: "/" },
+  { label: "About us", href: "/#about" },
+  { label: "Our areas", href: "/#areas" },
   {
     label: "Our products & services",
     href: "#",
     dropdown: [
-      { label: "Service A", href: "#" },
-      { label: "Service B", href: "#" },
-      { label: "Service C", href: "#" },
+      { label: "Service A", href: "/services/service-a" },
+      { label: "Service B", href: "/services/service-b" },
+      { label: "Service C", href: "/services/service-c" },
     ],
   },
-  { label: "Gallery", href: "#" },
-  { label: "Contact", href: "#" },
+  { label: "Gallery", href: "/#gallery" },
+  { label: "Contact", href: "/contact" },
 ];
 
 export default function Header() {
@@ -65,12 +66,12 @@ export default function Header() {
                       >
                         {item.dropdown.map((sub) => (
                           <li key={sub.label}>
-                            <a
+                            <Link
                               href={sub.href}
                               className="block px-4 py-2 hover:bg-gray-100"
                             >
                               {sub.label}
-                            </a>
+                            </Link>
                           </li>
                         ))}
                       </motion.ul>
@@ -78,12 +79,12 @@ export default function Header() {
                   </AnimatePresence>
                 </>
               ) : (
-                <a
+                <Link
                   href={item.href}
                   className="relative pb-1 hover:after:absolute hover:after:left-0 hover:after:bottom-0.5 hover:after:h-[2px] hover:after:w-full hover:after:bg-[var(--color-secondary)] hover:after:content-[''] transition-all"
                 >
                   {item.label}
-                </a>
+                </Link>
               )}
             </div>
           ))}
@@ -125,21 +126,20 @@ export default function Header() {
 }
 
 /*
-Design reasoning
-- Dropdown uses Framer Motion for smooth fade + slide animation on open/close.
-- AnimatePresence ensures proper exit animation when dropdown closes.
-- Improves visual experience while keeping hover underline intact.
+Design reasoning:
+- Internal links now use Next.js Link for client-side navigation, preventing full page reload.
+- Dropdown items also use Link for internal pages.
+- External social links remain <a> tags for proper behavior.
 
-Structure
-- Center: Menu items with optional dropdown using motion.ul
-- Right: Social icons remain unchanged
+Structure:
+- Center: Navigation menu with optional dropdowns using motion.ul
+- Right: Social media icons
 
-Implementation guidance
-- Install framer-motion via `npm i framer-motion` if not present.
-- Dropdown items remain focusable and hoverable; Tailwind handles styling.
-- Can add multi-level dropdowns with nested motion.ul similarly.
+Implementation guidance:
+- Adjust hrefs to match actual internal routes.
+- Framer Motion handles smooth dropdown animations; Link preserves SPA behavior.
 
-Scalability insight
-- Framer Motion enables reusable animation for future dropdowns or modals.
-- Animation duration and easing easily adjustable for consistent UX.
+Scalability insight:
+- Easily extendable with nested dropdowns or multi-level menus using the same pattern.
+- Client-side routing ensures consistent UX for all internal pages.
 */
