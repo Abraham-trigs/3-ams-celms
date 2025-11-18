@@ -1,6 +1,3 @@
-// File: app/components/home/Header.tsx
-// Purpose: Main site navigation for 3-AMS-CELMS with dropdown using Next.js Link, Framer Motion animation, and active link highlight
-
 "use client";
 
 import React, { useState } from "react";
@@ -22,9 +19,8 @@ const menuItems = [
     label: "Our products & services",
     href: "#",
     dropdown: [
-      { label: "Service A", href: "/services/service-a" },
-      { label: "Service B", href: "/services/service-b" },
-      { label: "Service C", href: "/services/service-c" },
+      { label: "Our Product", href: "/our-services" },
+      { label: "Our Services", href: "/our-product" },
     ],
   },
   { label: "Gallery", href: "/#gallery" },
@@ -33,11 +29,10 @@ const menuItems = [
 
 export default function Header() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const pathname = usePathname(); // current route
+  const pathname = usePathname();
 
-  const toggleDropdown = (label: string) => {
+  const toggleDropdown = (label: string) =>
     setOpenDropdown(openDropdown === label ? null : label);
-  };
 
   const linkClasses = (href: string) =>
     `relative pb-1 transition-all ${
@@ -49,7 +44,7 @@ export default function Header() {
   return (
     <header className="w-full bg-[var(--color-primary)] text-white relative z-50">
       <div className="mx-auto max-w-7xl px-6 py-4 flex flex-wrap items-center justify-between relative">
-        {/* Center: Navigation */}
+        {/* Navigation */}
         <nav className="flex space-x-8 font-medium relative">
           {menuItems.map((item) => (
             <div key={item.label} className="relative">
@@ -57,17 +52,13 @@ export default function Header() {
                 <>
                   <button
                     onClick={() => toggleDropdown(item.label)}
-                    className={`flex items-center space-x-1 relative pb-1 ${
-                      pathname === item.href
-                        ? 'after:absolute after:left-0 after:bottom-0.5 after:h-[2px] after:w-full after:bg-[var(--color-secondary)] after:content-[""]'
-                        : ""
-                    }`}
+                    className={`flex items-center space-x-1 relative pb-1`}
                   >
                     <span>{item.label}</span>
                     <FaChevronDown size={12} />
                   </button>
 
-                  {/* Dropdown with Framer Motion */}
+                  {/* Dropdown with background & hover */}
                   <AnimatePresence>
                     {openDropdown === item.label && (
                       <motion.ul
@@ -81,7 +72,11 @@ export default function Header() {
                           <li key={sub.label}>
                             <Link
                               href={sub.href}
-                              className={linkClasses(sub.href)}
+                              className={`block px-4 py-2 rounded transition-colors ${
+                                pathname === sub.href
+                                  ? "bg-[var(--color-primary)] text-white font-semibold"
+                                  : "hover:bg-[var(--color-primary)] hover:text-white"
+                              }`}
                             >
                               {sub.label}
                             </Link>
@@ -100,7 +95,7 @@ export default function Header() {
           ))}
         </nav>
 
-        {/* Right: Social icons */}
+        {/* Social Icons */}
         <div className="flex space-x-4 text-white">
           <a
             href="#"
@@ -134,23 +129,3 @@ export default function Header() {
     </header>
   );
 }
-
-/*
-Design reasoning:
-- Highlights active link based on current pathname, preserving hover underline for others.
-- Dropdown items use same logic for active state.
-- Improves navigation clarity and consistent UX for users.
-
-Structure:
-- Center: Navigation menu with optional dropdowns using motion.ul
-- Right: Social media icons
-
-Implementation guidance:
-- Ensure hrefs match actual routes for active detection.
-- usePathname() enables SPA-style active link highlighting.
-- Framer Motion handles smooth dropdown animations.
-
-Scalability insight:
-- Active link logic works for multi-level dropdowns.
-- Can extend to highlight parent dropdown if a child page is active.
-*/

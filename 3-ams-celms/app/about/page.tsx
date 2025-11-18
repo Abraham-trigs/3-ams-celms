@@ -120,7 +120,7 @@ export default function AboutPage() {
           whileHover={{ scale: 1.02 }}
         >
           <Image
-            src="/images/hangar-placeholder.jpg"
+            src="/aircraft-outline.jpg"
             alt="3AMS-CELMS Hangar"
             fill
             className="object-cover rounded-lg shadow-lg"

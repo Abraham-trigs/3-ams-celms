@@ -17,32 +17,32 @@ interface Product {
 const products: Product[] = [
   {
     name: "Aircraft Weighing Set",
-    imageSrc: "/products/aircraft-weighing-set.png",
+    imageSrc: "/aircraft-weighing-set.png",
   },
   {
     name: "Anti-Icing Duct Tester Leak",
-    imageSrc: "/products/anti-icing-duct-tester.png",
+    imageSrc: "/anti-icing-duct-tester.png",
   },
   {
     name: "Borescope Control Unit",
-    imageSrc: "/products/borescope-control-unit.png",
+    imageSrc: "/borescope-control-unit.png",
   },
   {
     name: "Cabin Pressure Test Unit",
-    imageSrc: "/products/cabin-pressure-test-unit.png",
+    imageSrc: "/cabin-pressure-test-unit.png",
   },
   {
     name: "Compass Correction System",
-    imageSrc: "/products/compass-correction-system.png",
+    imageSrc: "/compass-correction-system.png",
   },
   {
     name: "Digital Pitot Static Test Set",
-    imageSrc: "/products/pitot-static-test-set.png",
+    imageSrc: "/pitot-static-test-set.png",
   },
-  { name: "Fuel Test Set", imageSrc: "/products/fuel-test-set.png" },
+  { name: "Fuel Test Set", imageSrc: "/fuel-test-set.png" },
   {
     name: "Light Aircraft Weighing Set",
-    imageSrc: "/products/light-aircraft-weighing-set.png",
+    imageSrc: "/light-aircraft-weighing-set.png",
   },
 ];
 

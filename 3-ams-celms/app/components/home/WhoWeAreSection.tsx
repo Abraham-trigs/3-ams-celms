@@ -27,31 +27,31 @@ const ourAreas = [
     title: "Technical Support",
     description:
       "Our team provides specialized technical assistance including diagnostics, troubleshooting, ramp support, and operational readiness. Services cover both civil and military aviation platforms.",
-    icon: "/images/technical-support.png",
+    icon: "/technical-support.jpg",
   },
   {
     title: "Component & Engine Support",
     description:
       "We manage removal, installation, functional testing, and technical liaison with OEM-approved repair stations — ensuring components and engines meet strict airworthiness standards.",
-    icon: "/images/component-engine.png",
+    icon: "/component-engine.jpg",
   },
   {
     title: "Painting & Surface Restoration",
     description:
       "Our workshop supports striping, corrosion treatment, panel repair, and surface refinishing. We maintain aircraft exterior integrity while ensuring compliance with aviation coating specifications.",
-    icon: "/images/painting-restoration.png",
+    icon: "/painting-restoration.jpg",
   },
   {
     title: "Aeroplane Maintenance",
     description:
       "We deliver structured maintenance programs, spare parts coordination, system inspections, and reliability tracking — all supported by an IT-based Maintenance Management System.",
-    icon: "/images/aeroplane-maintenance.png",
+    icon: "/aeroplane-maintenance.jpg",
   },
   {
     title: "Aircraft Maintenance (MRO)",
     description:
       "With expanding facilities at KIA, we provide end-to-end maintenance, repair, and overhaul services for narrow-body, special-mission, and private aircraft, ensuring safety, efficiency, and minimized downtime.",
-    icon: "/images/mro.png",
+    icon: "/mro.png",
   },
 ];
 
@@ -88,7 +88,7 @@ export default function WhoWeAreSection() {
           {/* Image */}
           <div className="md:w-1/2 flex justify-center">
             <Image
-              src="/images/who-we-are.jpg"
+              src="/who.jpg"
               alt="Who We Are"
               width={500}
               height={500}
@@ -151,8 +151,8 @@ export default function WhoWeAreSection() {
               <Image
                 src={area.icon}
                 alt={area.title}
-                width={80}
-                height={80}
+                width={200}
+                height={200}
                 className="mb-4"
               />
               <h3

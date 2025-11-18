@@ -19,33 +19,45 @@ interface Partner {
 const partners: Partner[] = [
   {
     name: "GCAA",
-    logoSrc: "/logos/gcaa.png",
+    logoSrc: "/gcaa.jpg",
     quote: "Ensuring top-tier aviation standards.",
   },
   {
     name: "Africa World Airlines",
-    logoSrc: "/logos/awa.png",
+    logoSrc: "/aws.png",
     quote: "Collaboration with 3AMS-CELMS is invaluable.",
   },
   {
     name: "Ghana Air Force",
-    logoSrc: "/logos/ghana-air-force.png",
+    logoSrc: "/gafc.jpg",
     quote: "They provide unmatched reliability in MRO services.",
   },
   {
     name: "GACL",
-    logoSrc: "/logos/gacl.png",
+    logoSrc: "/gacl.png",
     quote: "Their expertise enhances operational capabilities.",
   },
   {
     name: "PassionAir",
-    logoSrc: "/logos/passionair.png",
+    logoSrc: "/passion-air.jpg",
     quote: "3AMS-CELMS is a key ally in our operations.",
   },
   {
     name: "OEMs",
-    logoSrc: "/logos/oems.png",
+    logoSrc: "/oems.avif",
     quote: "Working together leads to innovation and growth.",
+  },
+
+  {
+    name: "BMT",
+    logoSrc: "/bmt.webp",
+    quote: "Always in alignment.",
+  },
+
+  {
+    name: "Gianair",
+    logoSrc: "/gianair.webp",
+    quote: "Most Responsive",
   },
 ];
 

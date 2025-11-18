@@ -38,6 +38,20 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
         "We provide timely maintenance to keep your operations running smoothly.",
       ctaText: "Contact Us",
     },
+    {
+      src: "/video4.mp4",
+      headline: "State-of-the-Art Facilities",
+      subtext:
+        "Our workshops are equipped with the latest technology for precision maintenance.",
+      ctaText: "Explore Facilities",
+    },
+    {
+      src: "/video5.mp4",
+      headline: "Global Reach",
+      subtext:
+        "We support operators worldwide with our extensive maintenance network.",
+      ctaText: "See Locations",
+    },
   ],
   currentIndex: 0,
 
