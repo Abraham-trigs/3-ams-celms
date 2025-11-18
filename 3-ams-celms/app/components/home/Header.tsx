@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -19,8 +19,8 @@ const menuItems = [
     label: "Our products & services",
     href: "#",
     dropdown: [
-      { label: "Our Product", href: "/our-services" },
-      { label: "Our Services", href: "/our-product" },
+      { label: "Our Product", href: "/our-product" },
+      { label: "Our Services", href: "/our-services" },
     ],
   },
   { label: "Gallery", href: "/#gallery" },
@@ -30,9 +30,31 @@ const menuItems = [
 export default function Header() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const pathname = usePathname();
+  const headerRef = useRef<HTMLDivElement>(null);
 
   const toggleDropdown = (label: string) =>
     setOpenDropdown(openDropdown === label ? null : label);
+
+  const closeDropdown = () => setOpenDropdown(null);
+
+  // Close dropdown on route change
+  useEffect(() => {
+    closeDropdown();
+  }, [pathname]);
+
+  // Close dropdown if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        headerRef.current &&
+        !headerRef.current.contains(event.target as Node)
+      ) {
+        closeDropdown();
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const linkClasses = (href: string) =>
     `relative pb-1 transition-all ${
@@ -42,7 +64,10 @@ export default function Header() {
     }`;
 
   return (
-    <header className="w-full bg-[var(--color-primary)] text-white relative z-50">
+    <header
+      className="w-full bg-[var(--color-primary)] text-white relative z-50"
+      ref={headerRef}
+    >
       <div className="mx-auto max-w-7xl px-6 py-4 flex flex-wrap items-center justify-between relative">
         {/* Navigation */}
         <nav className="flex space-x-8 font-medium relative">
@@ -52,13 +77,12 @@ export default function Header() {
                 <>
                   <button
                     onClick={() => toggleDropdown(item.label)}
-                    className={`flex items-center space-x-1 relative pb-1`}
+                    className="flex items-center space-x-1 relative pb-1"
                   >
                     <span>{item.label}</span>
                     <FaChevronDown size={12} />
                   </button>
 
-                  {/* Dropdown with background & hover */}
                   <AnimatePresence>
                     {openDropdown === item.label && (
                       <motion.ul
