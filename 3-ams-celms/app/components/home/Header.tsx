@@ -23,7 +23,7 @@ const menuItems = [
       { label: "Our Services", href: "/our-services" },
     ],
   },
-  { label: "Gallery", href: "/#gallery" },
+  { label: "Gallery", href: "/gallery" },
   { label: "Contact", href: "/contact" },
 ];
 

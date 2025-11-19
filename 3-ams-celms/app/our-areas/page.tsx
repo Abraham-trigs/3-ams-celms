@@ -10,13 +10,13 @@ const services = [
     title: "Technical Support",
     description:
       "Our team delivers specialized technical assistance, including diagnostics, troubleshooting, ramp operations, and operational readiness. Services cater to both civil and military aviation platforms, ensuring every aircraft is mission-ready and compliant with industry standards.",
-    imageSrc: "/images/services/technical-support.jpg",
+    imageSrc: "/technical-support.jpg",
   },
   {
     title: "Component & Engine Support",
     description:
       "We manage component and engine removal, installation, functional testing, and technical liaison with OEM-approved repair stations. All work adheres to strict airworthiness requirements, guaranteeing reliable performance and safety.",
-    imageSrc: "/images/services/component-engine.jpg",
+    imageSrc: "/engine-repair.jpg",
   },
   {
     title: "Painting & Surface Restoration",
@@ -28,7 +28,7 @@ const services = [
     title: "Aeroplane Maintenance",
     description:
       "We provide structured maintenance programs, spare parts coordination, system inspections, and reliability tracking, supported by an IT-based Maintenance Management System. This ensures aircraft readiness, operational efficiency, and compliance.",
-    imageSrc: "/images/services/aeroplane-maintenance.jpg",
+    imageSrc: "/maintence.jpg",
   },
   {
     title: "Aircraft Maintenance (MRO)",
