@@ -33,25 +33,25 @@ const ourAreas = [
     title: "Component & Engine Support",
     description:
       "We manage removal, installation, functional testing, and technical liaison with OEM-approved repair stations — ensuring components and engines meet strict airworthiness standards.",
-    icon: "/component-engine.jpg",
+    icon: "/engine-repair.jpg",
   },
   {
-    title: "Painting & Surface Restoration",
+    title: "Surface Restoration",
     description:
       "Our workshop supports striping, corrosion treatment, panel repair, and surface refinishing. We maintain aircraft exterior integrity while ensuring compliance with aviation coating specifications.",
-    icon: "/painting-restoration.jpg",
+    icon: "/painting-restoration.webp",
   },
   {
     title: "Aeroplane Maintenance",
     description:
       "We deliver structured maintenance programs, spare parts coordination, system inspections, and reliability tracking — all supported by an IT-based Maintenance Management System.",
-    icon: "/aeroplane-maintenance.jpg",
+    icon: "/maintence.webp",
   },
   {
     title: "Aircraft Maintenance (MRO)",
     description:
       "With expanding facilities at KIA, we provide end-to-end maintenance, repair, and overhaul services for narrow-body, special-mission, and private aircraft, ensuring safety, efficiency, and minimized downtime.",
-    icon: "/mro.png",
+    icon: "/maintenance.jpg",
   },
 ];
 

@@ -100,7 +100,7 @@ export default function AboutPage() {
           </div>
 
           <motion.p
-            className="text-[var(--color-text-secondary)] text-lg sm:text-xl transition-transform duration-300 hover:scale-105"
+            className="text-[var(--color-primary)] text-lg sm:text-xl transition-transform duration-300 hover:scale-105"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -299,7 +299,7 @@ export default function AboutPage() {
           whileHover={{ scale: 1.02 }}
         >
           <Image
-            src="/images/hangar-2-placeholder.jpg"
+            src="/Engineering.webp"
             alt="Hangar & Labs"
             fill
             className="object-cover rounded-lg shadow-lg"

@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const menuItems = [
   { label: "Home", href: "/" },
-  { label: "About us", href: "/about" },
+  { label: "About us", href: "/about-us" },
   { label: "Our areas", href: "/our-areas" },
   {
     label: "Our products & services",

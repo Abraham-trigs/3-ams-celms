@@ -39,7 +39,7 @@ const partners: Partner[] = [
   },
   {
     name: "PassionAir",
-    logoSrc: "/passion-air.jpg",
+    logoSrc: "/aeroTech.jpg",
     quote: "3AMS-CELMS is a key ally in our operations.",
   },
   {
@@ -50,7 +50,7 @@ const partners: Partner[] = [
 
   {
     name: "BMT",
-    logoSrc: "/bmt.webp",
+    logoSrc: "/bnt.jpg",
     quote: "Always in alignment.",
   },
 

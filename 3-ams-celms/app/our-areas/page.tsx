@@ -28,7 +28,7 @@ const services = [
     title: "Aeroplane Maintenance",
     description:
       "We provide structured maintenance programs, spare parts coordination, system inspections, and reliability tracking, supported by an IT-based Maintenance Management System. This ensures aircraft readiness, operational efficiency, and compliance.",
-    imageSrc: "/maintence.jpg",
+    imageSrc: "/maintenance.jpg",
   },
   {
     title: "Aircraft Maintenance (MRO)",
