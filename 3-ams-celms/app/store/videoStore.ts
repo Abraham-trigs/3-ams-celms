@@ -76,18 +76,7 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
       subtext: "Adhering to the highest safety and regulatory standards.",
       ctaText: "Explore Facilities",
     },
-    {
-      src: "/video10.mp4",
-      headline: "Customer-Centric Approach",
-      subtext: "We tailor services to meet each operator's unique needs.",
-      ctaText: "See Locations",
-    },
-    {
-      src: "/video11.mp4",
-      headline: "Global Support Network",
-      subtext: "Providing support to operators across continents.",
-      ctaText: "Learn More",
-    },
+    
   ],
   currentIndex: 0,
 
