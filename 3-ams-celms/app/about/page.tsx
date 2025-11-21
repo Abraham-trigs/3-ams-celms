@@ -179,6 +179,34 @@ export default function AboutPage() {
         </motion.div>
       </section>
 
+      {/* Vision & Core Values */}
+      <section className="bg-[var(--color-background)] py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-12">
+          <div>
+            <h2 className="text-3xl font-bold mb-2">Our Vision</h2>
+            <div className="h-[2px] w-24 sm:w-32 bg-[var(--color-primary)] mx-auto mb-4"></div>
+            <p className="text-[var(--color-text-secondary)] text-lg sm:text-xl">
+              To establish Ghana as the leading aviation maintenance hub in West
+              Africa by delivering trusted MRO solutions, developing local
+              expertise, and advancing a culture of safety, innovation, and
+              operational excellence across the region.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-3xl font-bold mb-2">Our Core Values</h2>
+            <div className="h-[2px] w-24 sm:w-32 bg-[var(--color-primary)] mx-auto mb-4"></div>
+            <p className="text-[var(--color-text-secondary)] text-lg sm:text-xl">
+              To provide world-class maintenance, repair, and overhaul (MRO)
+              services in West Africa, ensuring safety, reliability, and
+              technical excellence while empowering local talent, reducing
+              operational downtime for our clients, and advancing Ghana as a
+              regional aviation hub.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Core Services */}
       <section className="bg-[var(--color-surface)] py-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
