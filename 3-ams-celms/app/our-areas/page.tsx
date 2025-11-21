@@ -19,10 +19,10 @@ const services = [
     imageSrc: "/engine-repair.jpg",
   },
   {
-    title: "Painting & Surface Restoration",
+    title: "Surface Restoration",
     description:
       "Our workshop handles aircraft striping, corrosion treatment, panel repair, and surface refinishing. We maintain exterior integrity while meeting aviation coating specifications and ensuring a professional finish.",
-    imageSrc: "/images/services/painting-restoration.jpg",
+    imageSrc: "/painting-restoration.webp",
   },
   {
     title: "Aeroplane Maintenance",
@@ -34,7 +34,7 @@ const services = [
     title: "Aircraft Maintenance (MRO)",
     description:
       "With our expanding facilities at Kotoka International Airport, we offer end-to-end maintenance, repair, and overhaul (MRO) services for narrow-body, special-mission, and private aircraft. Our focus is on safety, operational efficiency, and minimizing downtime.",
-    imageSrc: "/images/services/mro.jpg",
+    imageSrc: "/maintence.webp",
   },
 ];
 

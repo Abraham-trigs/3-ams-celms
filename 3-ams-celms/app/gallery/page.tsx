@@ -13,10 +13,10 @@ interface TeamMember {
 
 const teamMembers: TeamMember[] = [
   {
-    name: "John Doe",
-    role: "Director",
+    name: "Clifford Martey Korley",
+    role: "Managing Director / Accountable Manager",
     description: "Overall strategic oversight and leadership.",
-    imageSrc: "/images/team-1.jpg",
+    imageSrc: "/Clifford.webp",
   },
   {
     name: "Jane Smith",
@@ -62,7 +62,7 @@ export default function GalleryPage() {
             className="w-full flex justify-center"
           >
             <Image
-              src="/images/structure.jpg"
+              src="/structure.webp"
               alt="Company Structure"
               width={900}
               height={600}
@@ -133,7 +133,7 @@ export default function GalleryPage() {
                 className="min-w-[280px] snap-center"
               >
                 <Image
-                  src={`/images/work-${num}.jpg`}
+                  src={`/work-${num}.webp`}
                   alt={`Realized work ${num}`}
                   width={400}
                   height={300}
