@@ -1,26 +1,42 @@
 // File: app/components/home/HeroVideo.tsx
-// Purpose: Rotating hero video section for 3-AMS-CELMS using Zustand store
-
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useVideoStore } from "@/app/store/videoStore";
 
 export default function HeroVideo() {
   const { videos, currentIndex, nextVideo } = useVideoStore();
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Rotate videos automatically every 5 seconds (can be customized per clip)
+  // Rotate videos automatically every 5 seconds
   useEffect(() => {
     if (videos.length === 0) return;
 
     const timer = setTimeout(() => {
       nextVideo();
-    }, 5000); // 5000ms per clip
+    }, 5000);
 
     return () => clearTimeout(timer);
   }, [currentIndex, nextVideo, videos.length]);
 
-  if (videos.length === 0) return null; // nothing to show
+  // Auto-play handling for production environments
+  useEffect(() => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+
+    const playPromise = videoEl.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          // Autoplay started
+        })
+        .catch((err) => {
+          console.warn("Video autoplay failed:", err);
+        });
+    }
+  }, [currentIndex]); // re-play when index changes
+
+  if (videos.length === 0) return null;
 
   const { src, headline, subtext, ctaText } = videos[currentIndex];
 
@@ -28,11 +44,15 @@ export default function HeroVideo() {
     <section className="relative w-full h-[60vh] md:h-[75vh] overflow-hidden">
       {/* Video */}
       <video
+        ref={videoRef}
         key={src}
         src={src}
         autoPlay
         muted
-        loop={false} // play once per clip
+        loop={false}
+        playsInline
+        preload="auto"
+        poster="/video-poster.jpg" // optional: placeholder for slow loads
         className="absolute top-0 left-0 w-full h-full object-cover"
       />
 
@@ -55,14 +75,3 @@ export default function HeroVideo() {
     </section>
   );
 }
-
-/*
-Design reasoning
-- Correctly consumes `useVideoStore` from Zustand.
-- Automatically rotates through videos.
-- Overlay content comes directly from the store for dynamic updates.
-
-Scalability
-- Adding/removing videos in `videoStore.ts` updates the hero automatically.
-- Multiple components can access or control the hero rotation if needed.
-*/
