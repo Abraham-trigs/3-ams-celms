@@ -52,6 +52,42 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
         "We support operators worldwide with our extensive maintenance network.",
       ctaText: "See Locations",
     },
+    {
+      src: "/video6.mp4",
+      headline: "Cutting-Edge Tools",
+      subtext: "Our team leverages the latest tools for precision and safety.",
+      ctaText: "Learn More",
+    },
+    {
+      src: "/video7.mp4",
+      headline: "Skilled Workforce",
+      subtext: "Experienced engineers certified across multiple aircraft models.",
+      ctaText: "Get Started",
+    },
+    {
+      src: "/video8.mp4",
+      headline: "Rapid Turnaround",
+      subtext: "Timely services to keep your operations flying smoothly.",
+      ctaText: "Contact Us",
+    },
+    {
+      src: "/video9.mp4",
+      headline: "Safety First",
+      subtext: "Adhering to the highest safety and regulatory standards.",
+      ctaText: "Explore Facilities",
+    },
+    {
+      src: "/video10.mp4",
+      headline: "Customer-Centric Approach",
+      subtext: "We tailor services to meet each operator's unique needs.",
+      ctaText: "See Locations",
+    },
+    {
+      src: "/video11.mp4",
+      headline: "Global Support Network",
+      subtext: "Providing support to operators across continents.",
+      ctaText: "Learn More",
+    },
   ],
   currentIndex: 0,
 

@@ -8,10 +8,14 @@ export default function HeroVideo() {
   const { videos, currentIndex, nextVideo } = useVideoStore();
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Rotate videos automatically every 5 seconds
-  useEffect(() => {
-    if (videos.length === 0) return;
+  if (videos.length === 0) return null;
 
+  const { src, headline, subtext, ctaText } = videos[currentIndex];
+  const nextVideoIndex = (currentIndex + 1) % videos.length;
+  const nextVideoSrc = videos[nextVideoIndex]?.src;
+
+  // Rotate videos every 5 seconds
+  useEffect(() => {
     const timer = setTimeout(() => {
       nextVideo();
     }, 5000);
@@ -19,26 +23,30 @@ export default function HeroVideo() {
     return () => clearTimeout(timer);
   }, [currentIndex, nextVideo, videos.length]);
 
-  // Auto-play handling for production environments
+  // Attempt autoplay on mount / index change
   useEffect(() => {
     const videoEl = videoRef.current;
     if (!videoEl) return;
 
     const playPromise = videoEl.play();
     if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          // Autoplay started
-        })
-        .catch((err) => {
-          console.warn("Video autoplay failed:", err);
-        });
+      playPromise.catch((err) => console.warn("Video autoplay failed:", err));
     }
-  }, [currentIndex]); // re-play when index changes
+  }, [currentIndex]);
 
-  if (videos.length === 0) return null;
+  // Preload next video for smoother transitions
+  useEffect(() => {
+    if (!nextVideoSrc) return;
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "video";
+    link.href = nextVideoSrc;
+    document.head.appendChild(link);
 
-  const { src, headline, subtext, ctaText } = videos[currentIndex];
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, [nextVideoSrc]);
 
   return (
     <section className="relative w-full h-[60vh] md:h-[75vh] overflow-hidden">
@@ -52,7 +60,7 @@ export default function HeroVideo() {
         loop={false}
         playsInline
         preload="auto"
-        poster="/video-poster.jpg" // optional: placeholder for slow loads
+        poster="/video-poster.jpg" // optional per-video poster if you want
         className="absolute top-0 left-0 w-full h-full object-cover"
       />
 
