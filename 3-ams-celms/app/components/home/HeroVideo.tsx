@@ -1,82 +1,111 @@
 // File: app/components/home/HeroVideo.tsx
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useVideoStore } from "@/app/store/videoStore";
 
 export default function HeroVideo() {
-  const { videos, currentIndex, nextVideo } = useVideoStore();
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const { videos, currentIndex, nextIndex, advanceVideo, setCurrentIndex } =
+    useVideoStore();
+  const [activeLayer, setActiveLayer] = useState<0 | 1>(0); // which video layer is visible
+  const videoRefs = [
+    useRef<HTMLVideoElement>(null),
+    useRef<HTMLVideoElement>(null),
+  ];
 
-  if (videos.length === 0) return null;
+  if (!videos.length) return null;
 
-  const { src, headline, subtext, ctaText } = videos[currentIndex];
-  const nextVideoIndex = (currentIndex + 1) % videos.length;
-  const nextVideoSrc = videos[nextVideoIndex]?.src;
-
-  // Rotate videos every 5 seconds
+  // Random start
   useEffect(() => {
-    const timer = setTimeout(() => {
-      nextVideo();
-    }, 5000);
+    const randomIndex = Math.floor(Math.random() * videos.length);
+    setCurrentIndex(randomIndex);
+  }, [videos.length, setCurrentIndex]);
 
-    return () => clearTimeout(timer);
-  }, [currentIndex, nextVideo, videos.length]);
-
-  // Attempt autoplay on mount / index change
+  // Initialize video layers
   useEffect(() => {
-    const videoEl = videoRef.current;
-    if (!videoEl) return;
+    videoRefs.forEach((ref, idx) => {
+      if (!ref.current) return;
+      ref.current.muted = true;
+      ref.current.autoplay = true;
+      ref.current.playsInline = true;
+      ref.current.preload = "auto";
+      ref.current.style.opacity = idx === activeLayer ? "1" : "0";
+      ref.current.play().catch(() => {});
+    });
+  }, [activeLayer]);
 
-    const playPromise = videoEl.play();
-    if (playPromise !== undefined) {
-      playPromise.catch((err) => console.warn("Video autoplay failed:", err));
-    }
-  }, [currentIndex]);
-
-  // Preload next video for smoother transitions
+  // Crossfade & seamless loop
   useEffect(() => {
-    if (!nextVideoSrc) return;
-    const link = document.createElement("link");
-    link.rel = "preload";
-    link.as = "video";
-    link.href = nextVideoSrc;
-    document.head.appendChild(link);
+    const crossfadeDuration = 0.7; // seconds
+    let rafId: number;
 
-    return () => {
-      document.head.removeChild(link);
+    const tick = () => {
+      const topRef = videoRefs[activeLayer ? 1 : 0].current;
+      const hiddenRef = videoRefs[activeLayer ? 0 : 1].current;
+      if (!topRef || !hiddenRef || !topRef.duration) {
+        rafId = requestAnimationFrame(tick);
+        return;
+      }
+
+      const timeLeft = topRef.duration - topRef.currentTime;
+
+      // Start crossfade slightly before video ends
+      if (timeLeft <= crossfadeDuration) {
+        topRef.style.opacity = `${timeLeft / crossfadeDuration}`;
+        hiddenRef.style.opacity = `${1 - timeLeft / crossfadeDuration}`;
+      }
+
+      // When current video ends, swap layers
+      if (topRef.currentTime >= topRef.duration) {
+        setActiveLayer(activeLayer ? 0 : 1); // swap layer
+        advanceVideo(); // store updates currentIndex & nextIndex
+
+        // Prepare hidden layer with next video
+        hiddenRef.src = videos[nextIndex].src;
+        hiddenRef.currentTime = 0;
+        hiddenRef.play().catch(() => {});
+      }
+
+      rafId = requestAnimationFrame(tick);
     };
-  }, [nextVideoSrc]);
+
+    // Prepare initial sources
+    videoRefs[activeLayer ? 1 : 0].current!.src = videos[currentIndex].src;
+    videoRefs[activeLayer ? 0 : 1].current!.src = videos[nextIndex].src;
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [activeLayer, currentIndex, nextIndex, advanceVideo, videos]);
+
+  const topIndex = activeLayer ? 1 : 0;
+  const bottomIndex = activeLayer ? 0 : 1;
 
   return (
     <section className="relative w-full h-[60vh] md:h-[75vh] overflow-hidden">
-      {/* Video */}
+      {/* Bottom Layer */}
       <video
-        ref={videoRef}
-        key={src}
-        src={src}
-        autoPlay
-        muted
-        loop={false}
-        playsInline
-        preload="auto"
-        poster="/video-poster.jpg" // optional per-video poster if you want
-        className="absolute top-0 left-0 w-full h-full object-cover"
+        ref={videoRefs[bottomIndex]}
+        className="absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-700 opacity-0"
+      />
+      {/* Top Layer */}
+      <video
+        ref={videoRefs[topIndex]}
+        className="absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-700 opacity-100"
       />
 
       {/* Overlay */}
       <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-40 flex flex-col items-center justify-center text-center px-4">
         <h1 className="text-3xl md:text-5xl font-bold text-white">
-          {headline}
+          {videos[currentIndex].headline}
         </h1>
-        {subtext && (
+        {videos[currentIndex].subtext && (
           <p className="mt-4 text-lg md:text-xl text-white max-w-3xl">
-            {subtext}
+            {videos[currentIndex].subtext}
           </p>
         )}
-        {ctaText && (
+        {videos[currentIndex].ctaText && (
           <button className="mt-6 px-6 py-3 bg-[var(--color-primary)] text-white rounded hover:bg-[var(--color-primary-hover)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-hover)]">
-            {ctaText}
+            {videos[currentIndex].ctaText}
           </button>
         )}
       </div>
