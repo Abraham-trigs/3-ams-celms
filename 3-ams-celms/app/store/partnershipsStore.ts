@@ -18,7 +18,8 @@ interface PartnershipsStore {
 }
 
 export const usePartnershipsStore = create<PartnershipsStore>((set, get) => {
-  let interval: NodeJS.Timer | null = null;
+  // ✅ Fix: use ReturnType<typeof setInterval> so TypeScript knows it works in both Node + Browser
+  let interval: ReturnType<typeof setInterval> | null = null;
 
   const startInterval = () => {
     if (interval) clearInterval(interval);
@@ -44,16 +45,18 @@ export const usePartnershipsStore = create<PartnershipsStore>((set, get) => {
     maxScroll: 0,
     setMaxScroll: (max) => set({ maxScroll: max }),
     setScrollX: (x) => set({ scrollX: x }),
-    scrollLeft: (amount = 50) => set((state) => {
-      let nextX = state.scrollX - amount;
-      if (nextX < 0) nextX = state.maxScroll;
-      return { scrollX: nextX };
-    }),
-    scrollRight: (amount = 50) => set((state) => {
-      let nextX = state.scrollX + amount;
-      if (nextX > state.maxScroll) nextX = 0;
-      return { scrollX: nextX };
-    }),
+    scrollLeft: (amount = 50) =>
+      set((state) => {
+        let nextX = state.scrollX - amount;
+        if (nextX < 0) nextX = state.maxScroll;
+        return { scrollX: nextX };
+      }),
+    scrollRight: (amount = 50) =>
+      set((state) => {
+        let nextX = state.scrollX + amount;
+        if (nextX > state.maxScroll) nextX = 0;
+        return { scrollX: nextX };
+      }),
     pause: () => set({ isPaused: true }),
     resume: () => set({ isPaused: false }),
     startAutoScroll: () => startInterval(),

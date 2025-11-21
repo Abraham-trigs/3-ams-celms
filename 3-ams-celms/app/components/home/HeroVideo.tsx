@@ -4,21 +4,21 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useHeroVideoStore } from "@/app/store/heroVideoStore";
+import { useVideoStore } from "@/app/store/videoStore";
 
 export default function HeroVideo() {
-  const { videos, currentIndex, duration, nextVideo } = useHeroVideoStore();
+  const { videos, currentIndex, nextVideo } = useVideoStore();
 
-  // Rotate videos automatically
+  // Rotate videos automatically every 5 seconds (can be customized per clip)
   useEffect(() => {
     if (videos.length === 0) return;
 
     const timer = setTimeout(() => {
       nextVideo();
-    }, duration);
+    }, 5000); // 5000ms per clip
 
     return () => clearTimeout(timer);
-  }, [currentIndex, duration, nextVideo, videos.length]);
+  }, [currentIndex, nextVideo, videos.length]);
 
   if (videos.length === 0) return null; // nothing to show
 
@@ -32,7 +32,7 @@ export default function HeroVideo() {
         src={src}
         autoPlay
         muted
-        loop={false} // one play per clip
+        loop={false} // play once per clip
         className="absolute top-0 left-0 w-full h-full object-cover"
       />
 
@@ -58,23 +58,11 @@ export default function HeroVideo() {
 
 /*
 Design reasoning
-- Component now fully consumes Zustand store; no props required.
-- Automatically rotates through videos based on `duration`.
-- Overlay text comes directly from store per video, allowing dynamic updates.
+- Correctly consumes `useVideoStore` from Zustand.
+- Automatically rotates through videos.
+- Overlay content comes directly from the store for dynamic updates.
 
-Structure
-- video element: plays current video
-- overlay div: headline, subtext, CTA button
-- useEffect: timer to advance video
-
-Implementation guidance
-- Initialize the store with videos in page or layout using `addVideo`.
-- Example:
-  const { addVideo } = useHeroVideoStore();
-  addVideo({ src: "/video1.mp4", headline: "Headline", subtext: "Text", ctaText: "Learn More" });
-
-Scalability insight
-- Adding/removing videos dynamically updates the hero without modifying the component.
-- Overlay content can be CMS-driven per video.
-- Centralized store enables multiple components to reference or control the hero rotation.
+Scalability
+- Adding/removing videos in `videoStore.ts` updates the hero automatically.
+- Multiple components can access or control the hero rotation if needed.
 */

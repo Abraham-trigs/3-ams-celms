@@ -6,7 +6,7 @@ import Header from "@/app/components/home/Header";
 import Footer from "@/app/components/home/Footer";
 import TopBar from "@/app/components/home/TopBar";
 import React, { ReactNode } from "react";
-import { Inter } from "@next/font/google";
+import { Inter } from "next/font/google"; // ✅ fixed import
 import YearTag from "./components/home/YearTag";
 
 // Load Inter font

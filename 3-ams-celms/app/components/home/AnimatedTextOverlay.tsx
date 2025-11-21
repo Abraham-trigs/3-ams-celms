@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, Variants, Transition, Easing } from "framer-motion";
 
 interface AnimatedTextOverlayProps {
   headline: string;
@@ -16,8 +16,8 @@ export default function AnimatedTextOverlay({
   ctaText,
   onCtaClick,
 }: AnimatedTextOverlayProps) {
-  // Parent controls delay + stagger
-  const containerVariants = {
+  // Parent container variants
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -28,13 +28,16 @@ export default function AnimatedTextOverlay({
     },
   };
 
+  // Define easing properly
+  const ease: Easing = "easeOut";
+
   // Children animate individually
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.7, ease: "easeOut" },
+      transition: { duration: 0.7, ease }, // use properly typed easing
     },
   };
 
