@@ -1,20 +1,73 @@
 // File: app/components/about/AboutPage.tsx
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useVideoStore } from "@/app/store/videoStore";
 
 export default function AboutPage() {
+  const videos = useVideoStore((state) => state.videos);
+  const aboutVideoIndex = videos.findIndex((v) => v.src === "/video2.mp4");
+  const aboutVideo = aboutVideoIndex !== -1 ? videos[aboutVideoIndex] : null;
+
+  const [activeLayer, setActiveLayer] = useState<0 | 1>(0);
+  const videoRefs = [
+    useRef<HTMLVideoElement>(null),
+    useRef<HTMLVideoElement>(null),
+  ];
+
+  // Autoplay and crossfade the about video
+  useEffect(() => {
+    if (!aboutVideo) return;
+
+    const topRef = videoRefs[activeLayer ? 1 : 0].current;
+    const bottomRef = videoRefs[activeLayer ? 0 : 1].current;
+
+    if (topRef && bottomRef) {
+      bottomRef.src = aboutVideo.src;
+      bottomRef.currentTime = 0;
+      bottomRef.play().catch(() => {});
+
+      bottomRef.style.opacity = "1";
+      topRef.style.opacity = "0";
+    }
+  }, [aboutVideo, activeLayer]);
+
+  // Loop video indefinitely with smooth transition
+  useEffect(() => {
+    if (!aboutVideo) return;
+
+    const timer = setInterval(() => {
+      setActiveLayer(activeLayer ? 0 : 1);
+    }, 7000);
+
+    return () => clearInterval(timer);
+  }, [activeLayer, aboutVideo]);
+
+  if (!aboutVideo) return null;
+
   return (
     <main className="w-full bg-[var(--color-background)] text-[var(--color-primary)]">
-      {/* Hero Section */}
+      {/* Hero Video Section */}
       <section className="relative w-full h-96 sm:h-[32rem] lg:h-[36rem] overflow-hidden">
-        <Image
-          src="/images/hero-aero.jpg" // Replace with your hero image
-          alt="Aviation Hangar"
-          fill
-          className="object-cover"
+        <video
+          ref={videoRefs[0]}
+          src={aboutVideo.src}
+          autoPlay
+          muted
+          loop={false}
+          playsInline
+          className="absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-1000 opacity-1"
+        />
+        <video
+          ref={videoRefs[1]}
+          src={aboutVideo.src}
+          autoPlay
+          muted
+          loop={false}
+          playsInline
+          className="absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-1000 opacity-0"
         />
         <div className="absolute inset-0 bg-black/40 flex flex-col justify-center items-center text-center px-4">
           <motion.h1
@@ -23,7 +76,7 @@ export default function AboutPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            3AMS-CELMS
+            {aboutVideo.headline}
           </motion.h1>
           <motion.p
             className="text-lg sm:text-2xl max-w-2xl text-white"
@@ -31,14 +84,13 @@ export default function AboutPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
           >
-            Pioneering MRO Solutions in West Africa
+            {aboutVideo.subtext}
           </motion.p>
         </div>
       </section>
 
-      {/* Mission Statement Section with Visual Accent and Interactive Animation */}
+      {/* Mission Statement Section */}
       <section className="relative bg-[var(--color-background)] py-16 overflow-hidden">
-        {/* Decorative accent shape */}
         <div className="absolute -top-12 -right-12 w-64 h-64 bg-gradient-to-br from-[var(--color-primary)]/20 to-transparent rounded-full rotate-45 pointer-events-none"></div>
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
@@ -61,7 +113,6 @@ export default function AboutPage() {
           </motion.p>
         </div>
 
-        {/* Optional subtle aircraft illustration */}
         <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-32 h-32 sm:w-48 sm:h-48 opacity-10">
           <Image
             src="/images/aircraft-outline.svg"
@@ -72,7 +123,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Company Overview / Narrative */}
+      {/* Company Overview */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 flex flex-col lg:flex-row gap-8 items-center">
         <motion.div
           className="flex-1 space-y-4"

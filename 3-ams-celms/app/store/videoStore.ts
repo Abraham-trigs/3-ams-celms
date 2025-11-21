@@ -27,6 +27,7 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
     { src: "/video7.mp4", headline: "Skilled Workforce", subtext: "Experienced engineers certified across multiple aircraft models.", ctaText: "Get Started" },
     { src: "/video8.mp4", headline: "Rapid Turnaround", subtext: "Timely services to keep your operations flying smoothly.", ctaText: "Contact Us" },
     { src: "/video9.mp4", headline: "Safety First", subtext: "Adhering to the highest safety and regulatory standards.", ctaText: "Explore Facilities" },
+    { src: "/video2.mp4", headline: "About 3AMS-CELMS", subtext: "Pioneering MRO Solutions in West Africa" },
   ],
   currentIndex: 0,
   nextIndex: 1,
