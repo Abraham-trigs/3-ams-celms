@@ -1,4 +1,3 @@
-// File: components/OurServices.tsx
 "use client";
 
 import React from "react";
@@ -19,19 +18,19 @@ const ServiceList: React.FC<ServiceListProps> = ({
       {title}
     </h3>
     {description && (
-      <p className="text-[var(--color-text-secondary)] mb-2">{description}</p>
+      <p className="text-[var(--color-primary)] mb-2">{description}</p>
     )}
     {items && (
-      <ul className="list-disc list-inside text-[var(--color-text-secondary)] space-y-1">
+      <ul className="list-disc list-inside text-[var(--color-primary)] space-y-1">
         {items.map((item, i) =>
           typeof item === "string" ? (
             <li key={i}>{item}</li>
           ) : (
             <li key={i}>
-              <span className="font-medium text-[var(--color-secondary)]">
+              <span className="font-medium text-[var(--color-primary)]">
                 {item.heading}
               </span>
-              <ul className="list-disc list-inside ml-5 mt-1 space-y-1">
+              <ul className="list-disc list-inside ml-5 mt-1 space-y-1 text-[var(--color-primary)]">
                 {item.subItems.map((sub, j) => (
                   <li key={j}>{sub}</li>
                 ))}
@@ -74,14 +73,11 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
             key={i}
             className="text-center border-b border-[var(--color-secondary)]"
           >
-            <td className="px-4 py-2 font-semibold text-[var(--color-text-primary)] text-left">
+            <td className="px-4 py-2 font-semibold text-[var(--color-primary)] text-left">
               {row.model}
             </td>
             {row.checks.map((c, j) => (
-              <td
-                key={j}
-                className="px-4 py-2 text-[var(--color-text-primary)]"
-              >
+              <td key={j} className="px-4 py-2 text-[var(--color-primary)]">
                 {c ? "✔️" : ""}
               </td>
             ))}
@@ -100,7 +96,7 @@ export default function OurServices() {
           OUR SERVICES
         </h2>
 
-        <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-8 text-[var(--color-primary)]">
           <ServiceList
             title="Light Aviation"
             description="50H, 10H, and CDN maintenance visits"
@@ -150,14 +146,14 @@ export default function OurServices() {
         <MaintenanceTable
           columns={["Check A", "Check B", "Check C", "Check D"]}
           data={[
-            { model: "F28", checks: [true, false, true, true] },
+            { model: "F28", checks: [true, true, true, true] },
             { model: "B727", checks: [true, true, true, true] },
             { model: "B737 classique", checks: [true, true, true, true] },
             { model: "B737 NG", checks: [true, true, true, false] },
             { model: "B707", checks: [true, true, true, false] },
             { model: "DC8", checks: [true, true, true, false] },
             { model: "DC9", checks: [true, true, true, false] },
-            { model: "A300", checks: [true, true, false, false] },
+            { model: "A300", checks: [true, true, true, false] },
             { model: "A301", checks: [true, false, false, false] },
           ]}
         />
