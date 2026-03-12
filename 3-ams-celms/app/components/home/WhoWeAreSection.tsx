@@ -78,7 +78,7 @@ export default function WhoWeAreSection() {
             className="text-4xl font-bold mb-2 text-left"
             style={{ color: "var(--color-primary)" }}
           >
-            Who Are We?
+            Who We Are?
           </h2>
           <div className="h-[2px] w-full bg-[var(--color-primary)]"></div>
         </div>
