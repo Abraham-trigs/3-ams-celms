@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { ScreenID } from "../view/screen.registry";
+import { SCREEN_MAP, ScreenID } from "../view/screen.registry";
 
 export type ViewMode = "SPLIT" | "DETAIL";
 
@@ -28,13 +28,17 @@ export const useZodiac = create<ZodiacState>((set, get) => ({
   viewMode: "SPLIT",
   sharedAction: null,
   history: [],
-
   setScreen: (id, mode) => {
     const { activeScreenId, viewMode, history } = get();
-    // Save current state to history before moving forward
+
+    // Look up the screen's intended layout from the registry
+    const targetScreen = SCREEN_MAP[id];
+    const defaultMode = targetScreen?.layoutMode || "SPLIT";
+
     set({
       activeScreenId: id,
-      viewMode: mode || "SPLIT",
+      // Use the provided mode, otherwise use the screen's config mode
+      viewMode: mode || defaultMode,
       history: [...history, { id: activeScreenId, mode: viewMode }],
     });
   },
@@ -43,14 +47,16 @@ export const useZodiac = create<ZodiacState>((set, get) => ({
     const { history } = get();
     if (history.length === 0) return;
 
-    const last = history[history.length - 1];
-    const newHistory = history.slice(0, -1);
+    const newHistory = [...history];
+    const previous = newHistory.pop(); // Pop the top level of history
 
-    set({
-      activeScreenId: last.id,
-      viewMode: last.mode,
-      history: newHistory,
-    });
+    if (previous) {
+      set({
+        activeScreenId: previous.id,
+        viewMode: previous.mode,
+        history: newHistory,
+      });
+    }
   },
 
   setSharedAction: (action) => set({ sharedAction: action }),

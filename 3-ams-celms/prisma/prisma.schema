@@ -61,21 +61,37 @@ enum DeliveryStatus {
 //
 
 model Company {
-  id          String   @id @default(cuid())
-  name        String
-  logoUrl     String?
+  id             String      @id @default(cuid())
+  name           String
+  logoUrl        String?
 
   // Ghana Digital Address / Location System
   digitalAddress String?
   locationUrl    String?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
-  users       User[]
-  priceLists  PriceList[]
-  jobs        Job[]
-  materials   Material[]
+  // NEW: Stock and Inventory Management
+  stocks         Stock[]
+
+  users          User[]
+  priceLists     PriceList[]
+  jobs           Job[]
+  materials      Material[]
+}
+
+model Stock {
+  id           String   @id @default(cuid())
+  itemName     String
+  quantity     Int      @default(0)
+  unit         String   // e.g., "reams", "liters", "units"
+  minThreshold Int      @default(10) // For low-stock alerts
+  
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  updatedAt    DateTime @updatedAt
 }
 
 model User {

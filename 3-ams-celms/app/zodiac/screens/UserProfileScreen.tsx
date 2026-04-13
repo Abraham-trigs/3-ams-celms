@@ -9,13 +9,13 @@ export const UserProfileScreen: ZodiacScreen = {
   id: "USER_PROFILE",
   layoutMode: "DETAIL",
   TopComponent: () => {
-    const { setSharedAction } = useZodiac();
+    // 1. Pull setScreen from the store
+    const { setSharedAction, setScreen } = useZodiac();
 
-    // Publish the "Back" intent to the reusable button
     useEffect(() => {
       setSharedAction({
         label: "Back",
-        isBack: true, // Triggers the history retreat in the store
+        isBack: true,
         onPress: () => console.log("Exiting profile..."),
       });
 
@@ -49,9 +49,10 @@ export const UserProfileScreen: ZodiacScreen = {
           </div>
         </div>
 
-        {/* 3. Settings List */}
+        {/* 3. Settings List (Updated with Subscription) */}
         <div className="flex flex-col gap-2 mt-4">
           {[
+            { label: "Subscription", icon: "✨", id: "SUBSCRIPTION" }, // Added Subscription
             { label: "Notification Settings", icon: "🔔" },
             { label: "Payment Methods", icon: "💳" },
             { label: "Security & Privacy", icon: "🔒" },
@@ -59,18 +60,27 @@ export const UserProfileScreen: ZodiacScreen = {
           ].map((item, i) => (
             <div
               key={i}
+              onClick={() => item.id && setScreen(item.id as any)} // Trigger screen change
               className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <span>{item.icon}</span>
-                <span className="text-sm">{item.label}</span>
+                <span
+                  className={item.id === "SUBSCRIPTION" ? "text-cyan-400" : ""}
+                >
+                  {item.icon}
+                </span>
+                <span
+                  className={`text-sm ${item.id === "SUBSCRIPTION" ? "font-bold text-cyan-400" : ""}`}
+                >
+                  {item.label}
+                </span>
               </div>
               <span className="opacity-30 text-xs">→</span>
             </div>
           ))}
         </div>
 
-        {/* 4. THE REUSABLE BUTTON (Placed under the list) */}
+        {/* 4. THE REUSABLE BUTTON */}
         <div className="mt-auto pb-4 flex justify-center">
           <PrimaryActionButton />
         </div>
@@ -80,7 +90,6 @@ export const UserProfileScreen: ZodiacScreen = {
 
   DownComponent: undefined,
 
-  // Fallback config for the registry
   primaryAction: {
     label: "Back",
     isBack: true,
