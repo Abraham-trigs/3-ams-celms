@@ -14,16 +14,6 @@ export default function HomePage() {
   return (
     <div className="flex flex-col w-full">
       {/* Hero section */}
-      <HeroVideoContainer duration={7000} />
-
-      {/* Who We Are + Our Areas section */}
-      <WhoWeAreSection />
-      <CompetitiveAdvantageSection />
-      <PartnerWithUsSection />
-
-      <PartnershipsSection />
-      <QuoteSection />
-      <ProductsSection />
 
       {/* You can add more sections here, e.g., Testimonials, Partners, etc. */}
     </div>

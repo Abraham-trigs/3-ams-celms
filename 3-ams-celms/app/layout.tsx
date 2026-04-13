@@ -24,17 +24,17 @@ export default function RootLayout({ children }: RootLayoutProps) {
         style={{ backgroundColor: "var(--color-background)" }}
       >
         {/* Top thin bar with contact info and social icons */}
-        <TopBar />
+        {/* <TopBar /> */}
 
         {/* Main header/navigation */}
-        <Header />
+        {/* <Header /> */}
 
         {/* Page content */}
         <main className="flex-1 w-full">{children}</main>
 
         {/* Footer */}
-        <Footer />
-        <YearTag />
+        {/* <Footer />
+        <YearTag /> */}
       </body>
     </html>
   );

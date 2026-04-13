@@ -1,0 +1,363 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//
+// =====================
+// ENUMS
+// =====================
+//
+
+enum RoleType {
+  OWNER
+  ADMIN
+  STAFF
+  ACCOUNTANT
+}
+
+enum JobStatus {
+  DRAFT
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum StockMovementType {
+  IN
+  OUT
+  WASTE
+  ADJUSTMENT
+}
+
+enum ClientType {
+  INDIVIDUAL
+  COMPANY
+}
+
+enum DeliveryStatus {
+  PENDING
+  SCHEDULED
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+//
+// =====================
+// MULTI TENANCY
+// =====================
+//
+
+model Company {
+  id          String   @id @default(cuid())
+  name        String
+  logoUrl     String?
+
+  // Ghana Digital Address / Location System
+  digitalAddress String?
+  locationUrl    String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  priceLists  PriceList[]
+  jobs        Job[]
+  materials   Material[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+
+  memberships Membership[]
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  userId    String
+  companyId String
+  role      RoleType
+
+  user      User     @relation(fields: [userId], references: [id])
+  company   Company  @relation(fields: [companyId], references: [id])
+
+  @@unique([userId, companyId])
+}
+
+//
+// =====================
+// CLIENT SYSTEM
+// =====================
+//
+
+model Client {
+  id          String     @id @default(cuid())
+  companyId   String
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  type        ClientType @default(INDIVIDUAL)
+  isNew       Boolean    @default(true)
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  company     Company    @relation(fields: [companyId], references: [id])
+  jobs        Job[]
+
+  @@index([companyId])
+}
+
+//
+// =====================
+// JOB SYSTEM
+// =====================
+//
+
+model Job {
+  id          String     @id @default(cuid())
+  companyId   String
+  clientId    String
+
+  title       String?
+  status      JobStatus  @default(DRAFT)
+
+  totalAmount Float      @default(0)
+  paidAmount  Float      @default(0)
+
+  createdAt   DateTime   @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  client      Client     @relation(fields: [clientId], references: [id])
+  company     Company    @relation(fields: [companyId], references: [id])
+
+  items       JobItem[]
+  payments    Payment[]
+  assignments JobAssignment[]
+  delivery    Delivery?
+  statusLogs  JobStatusLog[]
+
+  @@index([companyId])
+  @@index([clientId])
+}
+
+model JobItem {
+  id          String   @id @default(cuid())
+  jobId       String
+
+  name        String
+  quantity    Int
+  unitPrice   Float
+
+  width       Float?
+  height      Float?
+  materialRef String?
+
+  job         Job      @relation(fields: [jobId], references: [id])
+
+  @@index([jobId])
+}
+
+model JobStatusLog {
+  id        String     @id @default(cuid())
+  jobId     String
+  status    JobStatus
+  createdAt DateTime   @default(now())
+
+  job       Job        @relation(fields: [jobId], references: [id])
+}
+
+//
+// =====================
+// PRICING SYSTEM
+// =====================
+//
+
+model PriceList {
+  id        String   @id @default(cuid())
+  companyId String
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  items     PriceItem[]
+
+  company   Company  @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+}
+
+model PriceItem {
+  id          String   @id @default(cuid())
+  priceListId String
+
+  serviceName String
+  unitPrice   Float
+
+  priceList   PriceList @relation(fields: [priceListId], references: [id])
+
+  @@index([priceListId])
+}
+
+model Estimate {
+  id          String   @id @default(cuid())
+  companyId   String
+  clientId    String
+
+  total       Float
+  snapshot    Json     // immutable pricing snapshot
+
+  createdAt   DateTime @default(now())
+
+  company     Company  @relation(fields: [companyId], references: [id])
+  client      Client   @relation(fields: [clientId], references: [id])
+  items       EstimateItem[]
+
+  @@index([companyId])
+}
+
+model EstimateItem {
+  id          String   @id @default(cuid())
+  estimateId  String
+
+  name        String
+  quantity    Int
+  unitPrice   Float
+
+  estimate    Estimate @relation(fields: [estimateId], references: [id])
+}
+
+//
+// =====================
+// STOCK (LEDGER SYSTEM)
+// =====================
+//
+
+model Material {
+  id        String   @id @default(cuid())
+  companyId String
+  name      String
+
+  unit      String   // e.g. meters, sheets
+  createdAt DateTime @default(now())
+
+  company   Company  @relation(fields: [companyId], references: [id])
+  movements StockMovement[]
+
+  @@index([companyId])
+}
+
+model StockMovement {
+  id          String              @id @default(cuid())
+  materialId  String
+  type        StockMovementType
+
+  quantity    Float
+  cost        Float?
+
+  jobId       String?
+  note        String?
+
+  createdAt   DateTime @default(now())
+
+  material    Material @relation(fields: [materialId], references: [id])
+
+  @@index([materialId])
+  @@index([type])
+}
+
+//
+// =====================
+// PAYMENT SYSTEM
+// =====================
+//
+
+model Payment {
+  id          String        @id @default(cuid())
+  companyId   String
+  jobId       String
+
+  amount      Float
+  method      String
+  reference   String?
+  proofUrl    String?
+
+  status      PaymentStatus @default(PENDING)
+
+  createdAt   DateTime @default(now())
+
+  company     Company @relation(fields: [companyId], references: [id])
+  job         Job     @relation(fields: [jobId], references: [id])
+
+  @@index([companyId])
+  @@index([jobId])
+}
+
+//
+// =====================
+// STAFF SYSTEM
+// =====================
+//
+
+model StaffProfile {
+  id        String   @id @default(cuid())
+  companyId String
+  userId    String
+
+  roleTitle String?
+  createdAt DateTime @default(now())
+
+  assignments JobAssignment[]
+
+  @@index([companyId])
+}
+
+model JobAssignment {
+  id        String   @id @default(cuid())
+  jobId     String
+  staffId   String
+
+  assignedAt DateTime @default(now())
+
+  job       Job          @relation(fields: [jobId], references: [id])
+  staff     StaffProfile @relation(fields: [staffId], references: [id])
+
+  @@index([jobId])
+}
+
+//
+// =====================
+// DELIVERY SYSTEM
+// =====================
+//
+
+model Delivery {
+  id        String         @id @default(cuid())
+  jobId     String         @unique
+
+  status    DeliveryStatus @default(PENDING)
+  address   String?
+
+  scheduledAt DateTime?
+  createdAt   DateTime @default(now())
+
+  job       Job @relation(fields: [jobId], references: [id])
+}
