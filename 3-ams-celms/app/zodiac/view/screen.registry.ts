@@ -3,7 +3,7 @@ import { JobSelectionScreen } from "../screens/JobSelection";
 import { ZodiacScreen } from "../types/screen.types";
 import { WelcomeScreen } from "../screens/WelcomeScreen";
 import { UserProfileScreen } from "../screens/UserProfileScreen";
-import { SubscriptionScreen } from "../screens/SubscriptionScreen";
+import { SubscriptionScreen } from "../screens/subscription/SubscriptionScreen";
 
 export const SCREEN_MAP: Record<string, ZodiacScreen> = {
   WELCOME: WelcomeScreen,
