@@ -5,35 +5,71 @@ import { useZodiac } from "../store/zodiac.store";
 import { useModalStore } from "../store/useModalStore";
 import { resolveLayout } from "../view/layout.engine";
 import { TopBar } from "../ui/TopBar";
+import { BottomBar } from "../ui/BottomBar";
+import { ScreenID } from "../view/screen.registry";
+import { getCachedScreen } from "../view/screen.cache";
 
 export function ZodiacShell() {
-  const { activeScreenId, viewMode, sharedAction, executeSharedAction } =
+  const { activeScreenId, viewMode, sharedAction, setSharedAction, setScreen } =
     useZodiac();
 
-  // 1. Get the components directly from the store (Priority/Hand-picked)
   const TopModal = useModalStore((s) => s.activeTopComponent);
   const DownModal = useModalStore((s) => s.activeDownComponent);
   const DetailModal = useModalStore((s) => s.activeDetailComponent);
   const GlobalModal = useModalStore((s) => s.activeGlobalComponent);
 
-  // 2. Get default components from the screen registry
-  const { topHeightStyle, showDownZone, TopZoneComponent, DownZoneComponent } =
-    resolveLayout(activeScreenId, viewMode);
+  const {
+    isTransitioning,
+    topHeightStyle,
+    showDownZone,
+    TopZoneComponent,
+    DownZoneComponent,
+  } = resolveLayout(activeScreenId, viewMode);
 
   useEffect(() => {
-    if (sharedAction) executeSharedAction();
-  }, [sharedAction, executeSharedAction]);
+    if (!sharedAction) return;
+
+    sharedAction.onPress?.();
+    setSharedAction(null);
+  }, [sharedAction, setSharedAction]);
+
+  useEffect(() => {
+    const onPopState = () => {
+      const path = window.location.pathname.replace("/", "").toUpperCase();
+      if (!path) return;
+
+      setScreen(path as ScreenID);
+    };
+
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [setScreen]);
+
+  useEffect(() => {
+    const path = window.location.pathname.replace("/", "").toUpperCase();
+    if (!path) return;
+
+    setScreen(path as ScreenID);
+  }, [setScreen]);
+
+  const cached = getCachedScreen(activeScreenId);
+
+  const TopRender = TopModal || cached.Top || TopZoneComponent;
+  const DownRender = DownModal || cached.Down || DownZoneComponent;
+
+  // 🔥 NEW: predictive warmup on screen change
+  useEffect(() => {
+    useZodiac.getState().predictNextScreen(activeScreenId);
+  }, [activeScreenId]);
 
   return (
-    <div className="zodiac-shell relative flex flex-col h-full overflow-hidden bg-black text-white">
-      {/* LAYER 4: GLOBAL */}
+    <div className="zodiac-shell flex flex-col h-full overflow-hidden bg-black text-white relative">
       {GlobalModal && (
         <div className="absolute inset-0 z-[100] bg-black/80 flex items-center justify-center">
           <GlobalModal />
         </div>
       )}
 
-      {/* LAYER 3: DETAIL */}
       {DetailModal && (
         <div className="absolute inset-0 z-50 bg-black">
           <DetailModal />
@@ -42,25 +78,22 @@ export function ZodiacShell() {
 
       <TopBar />
 
-      {/* LAYER 1: TOP ZONE */}
       <div
-        className="zodiac-top transition-all duration-500 overflow-hidden relative"
+        className={`zodiac-top transition-all duration-500 overflow-hidden relative ${
+          isTransitioning ? "opacity-80 scale-[0.99]" : "opacity-100 scale-100"
+        }`}
         style={{ height: topHeightStyle }}
       >
-        {/* Priority: Modal > Default Screen Component */}
-        {TopModal ? <TopModal /> : TopZoneComponent && <TopZoneComponent />}
+        {TopRender && <TopRender key={`top-${activeScreenId}`} />}
       </div>
 
-      {/* LAYER 2: DOWN ZONE */}
       {showDownZone && (
         <div className="zodiac-down flex-1 overflow-hidden relative">
-          {DownModal ? (
-            <DownModal />
-          ) : (
-            DownZoneComponent && <DownZoneComponent />
-          )}
+          {DownRender && <DownRender key={`down-${activeScreenId}`} />}
         </div>
       )}
+
+      <BottomBar />
     </div>
   );
 }

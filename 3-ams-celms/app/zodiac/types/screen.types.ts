@@ -1,29 +1,46 @@
-import { ReactNode } from "react";
 import { ViewMode } from "../store/zodiac.store";
 import { ScreenID } from "../view/screen.registry";
 
+/**
+ * Defines navigation + action behavior for a screen
+ */
 export interface ScreenAction {
   label: string;
-  nextScreenId?: ScreenID; // Use ScreenID for safety
+  nextScreenId?: ScreenID;
   nextViewMode?: ViewMode;
   onPress?: () => void;
 }
 
+/**
+ * Full lifecycle-aware screen contract
+ * (This is now part of your UI engine, not just React config)
+ */
 export interface ZodiacScreen {
-  id: ScreenID; // Matches your registry keys
+  id: ScreenID;
   layoutMode: ViewMode;
 
-  /**
-   * Components act as "Controllers" or "Views".
-   * With our new injection strategy, these can return null if they
-   * are just using useEffect to open modals.
-   */
+  // ---------------- UI LAYERS ----------------
   TopComponent: React.FC;
   DownComponent?: React.FC;
 
-  /**
-   * primaryAction is the default config, though screens usually
-   * override this via setSharedAction in a useEffect.
-   */
+  // ---------------- ACTIONS ----------------
   primaryAction?: ScreenAction;
+
+  // ---------------- LIFECYCLE HOOKS ----------------
+  /**
+   * Called when screen becomes active
+   */
+  onEnter?: () => void;
+
+  /**
+   * Called before screen is removed
+   * (useful for cleanup, modal reset, saving state)
+   */
+  onExit?: () => void;
+
+  /**
+   * Optional: runs once when screen is first registered/loaded
+   * (useful for prefetching data or lazy initialization)
+   */
+  onInit?: () => void;
 }

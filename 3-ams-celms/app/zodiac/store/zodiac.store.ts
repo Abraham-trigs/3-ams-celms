@@ -1,83 +1,183 @@
 import { create } from "zustand";
 import { SCREEN_MAP, ScreenID } from "../view/screen.registry";
+import { getCachedScreen } from "../view/screen.cache";
+import { screenPredictor } from "../view/screen.predictor";
 
 export type ViewMode = "SPLIT" | "DETAIL";
 
+/**
+ * UI action triggered from screens/components
+ */
 export interface ButtonAction {
   label: string;
   nextScreenId?: ScreenID;
   nextViewMode?: ViewMode;
   onPress?: () => void;
-  isBack?: boolean; // NEW: Explicit flag to trigger history retreat
+  isBack?: boolean;
 }
+
+/**
+ * Navigation entry for history stack
+ */
+type NavEntry = {
+  id: ScreenID;
+  mode: ViewMode;
+};
 
 interface ZodiacState {
   activeScreenId: ScreenID;
   viewMode: ViewMode;
+
   sharedAction: ButtonAction | null;
-  history: { id: ScreenID; mode: ViewMode }[]; // Track the path
+
+  history: NavEntry[];
+  future: NavEntry[];
 
   setScreen: (id: ScreenID, mode?: ViewMode) => void;
   goBack: () => void;
+  goForward: () => void;
+
   setSharedAction: (action: ButtonAction | null) => void;
   executeSharedAction: () => void;
+
+  preloadScreen: (id: ScreenID) => void;
+
+  // 🔥 NEW
+  predictNextScreen: (currentId: ScreenID) => void;
 }
 
 export const useZodiac = create<ZodiacState>((set, get) => ({
   activeScreenId: "WELCOME",
   viewMode: "SPLIT",
-  sharedAction: null,
-  history: [],
-  setScreen: (id, mode) => {
-    const { activeScreenId, viewMode, history } = get();
 
-    // Look up the screen's intended layout from the registry
-    const targetScreen = SCREEN_MAP[id];
-    const defaultMode = targetScreen?.layoutMode || "SPLIT";
+  sharedAction: null,
+
+  history: [],
+  future: [],
+
+  setScreen: (id, mode) => {
+    const state = get();
+
+    if (state.activeScreenId === id) return;
+
+    const target = SCREEN_MAP[id];
+    const resolvedMode = mode || target?.layoutMode || "SPLIT";
+
+    // warm current screen
+    getCachedScreen(id);
+
+    // 🔥 predictive warmup (future behavior)
+    screenPredictor.preload(id);
+
+    if (typeof window !== "undefined") {
+      window.history.pushState({}, "", `/${id.toLowerCase()}`);
+    }
 
     set({
       activeScreenId: id,
-      // Use the provided mode, otherwise use the screen's config mode
-      viewMode: mode || defaultMode,
-      history: [...history, { id: activeScreenId, mode: viewMode }],
+      viewMode: resolvedMode,
+
+      history: [
+        ...state.history,
+        {
+          id: state.activeScreenId,
+          mode: state.viewMode,
+        },
+      ],
+
+      future: [],
     });
   },
 
   goBack: () => {
-    const { history } = get();
-    if (history.length === 0) return;
+    const state = get();
 
-    const newHistory = [...history];
-    const previous = newHistory.pop(); // Pop the top level of history
+    const last = state.history[state.history.length - 1];
+    if (!last) return;
 
-    if (previous) {
-      set({
-        activeScreenId: previous.id,
-        viewMode: previous.mode,
-        history: newHistory,
-      });
-    }
+    set({
+      activeScreenId: last.id,
+      viewMode: last.mode,
+
+      history: state.history.slice(0, -1),
+
+      future: [
+        {
+          id: state.activeScreenId,
+          mode: state.viewMode,
+        },
+        ...state.future,
+      ],
+    });
+  },
+
+  goForward: () => {
+    const state = get();
+
+    const next = state.future[0];
+    if (!next) return;
+
+    set({
+      activeScreenId: next.id,
+      viewMode: next.mode,
+
+      history: [
+        ...state.history,
+        {
+          id: state.activeScreenId,
+          mode: state.viewMode,
+        },
+      ],
+
+      future: state.future.slice(1),
+    });
   },
 
   setSharedAction: (action) => set({ sharedAction: action }),
 
   executeSharedAction: () => {
-    const action = get().sharedAction;
+    const state = get();
+    const action = state.sharedAction;
+
     if (!action) return;
 
-    if (action.onPress) action.onPress();
+    action.onPress?.();
 
-    // Handle Back Logic
     if (action.isBack) {
       get().goBack();
+      set({ sharedAction: null });
       return;
     }
 
-    // Handle Forward Navigation
     if (action.nextScreenId) {
       get().setScreen(action.nextScreenId, action.nextViewMode);
-    } else if (action.nextViewMode) {
-      set({ viewMode: action.nextViewMode });
+      set({ sharedAction: null });
+      return;
+    }
+
+    if (action.nextViewMode) {
+      set({
+        viewMode: action.nextViewMode,
+        sharedAction: null,
+      });
+      return;
+    }
+
+    set({ sharedAction: null });
+  },
+
+  preloadScreen: (id) => {
+    getCachedScreen(id);
+  },
+
+  // 🔥 intelligent next-screen prediction
+  predictNextScreen: (currentId) => {
+    const state = get();
+
+    const last = state.history[state.history.length - 1];
+
+    if (last?.id) {
+      screenPredictor.preload(last.id);
     }
   },
 }));
