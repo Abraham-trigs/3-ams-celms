@@ -2,23 +2,26 @@ import { create } from "zustand";
 import { SCREEN_MAP, ScreenID } from "../view/screen.registry";
 import { getCachedScreen } from "../view/screen.cache";
 import { screenPredictor } from "../view/screen.predictor";
+import { useModalStore } from "../store/useModalStore";
 
 export type ViewMode = "SPLIT" | "DETAIL";
 
-/**
- * UI action triggered from screens/components
- */
 export interface ButtonAction {
   label: string;
+
+  type?: "NAVIGATE" | "BACK" | "MODAL_SWAP" | "CUSTOM";
+
   nextScreenId?: ScreenID;
   nextViewMode?: ViewMode;
-  onPress?: () => void;
+
+  modalZone?: "TOP" | "DOWN" | "DETAIL" | "GLOBAL";
+  modalComponent?: React.ComponentType<any>;
+
   isBack?: boolean;
+
+  onPress?: () => void;
 }
 
-/**
- * Navigation entry for history stack
- */
 type NavEntry = {
   id: ScreenID;
   mode: ViewMode;
@@ -41,8 +44,6 @@ interface ZodiacState {
   executeSharedAction: () => void;
 
   preloadScreen: (id: ScreenID) => void;
-
-  // 🔥 NEW
   predictNextScreen: (currentId: ScreenID) => void;
 }
 
@@ -55,6 +56,7 @@ export const useZodiac = create<ZodiacState>((set, get) => ({
   history: [],
   future: [],
 
+  // ---------------- NAVIGATION ----------------
   setScreen: (id, mode) => {
     const state = get();
 
@@ -63,10 +65,7 @@ export const useZodiac = create<ZodiacState>((set, get) => ({
     const target = SCREEN_MAP[id];
     const resolvedMode = mode || target?.layoutMode || "SPLIT";
 
-    // warm current screen
     getCachedScreen(id);
-
-    // 🔥 predictive warmup (future behavior)
     screenPredictor.preload(id);
 
     if (typeof window !== "undefined") {
@@ -133,6 +132,7 @@ export const useZodiac = create<ZodiacState>((set, get) => ({
     });
   },
 
+  // ---------------- ACTION SYSTEM ----------------
   setSharedAction: (action) => set({ sharedAction: action }),
 
   executeSharedAction: () => {
@@ -141,41 +141,49 @@ export const useZodiac = create<ZodiacState>((set, get) => ({
 
     if (!action) return;
 
-    action.onPress?.();
-
-    if (action.isBack) {
-      get().goBack();
-      set({ sharedAction: null });
-      return;
-    }
-
-    if (action.nextScreenId) {
-      get().setScreen(action.nextScreenId, action.nextViewMode);
-      set({ sharedAction: null });
-      return;
-    }
-
-    if (action.nextViewMode) {
-      set({
-        viewMode: action.nextViewMode,
-        sharedAction: null,
-      });
-      return;
-    }
-
+    // 🚨 CRITICAL: prevent repeated execution loop
     set({ sharedAction: null });
+
+    const modalStore = useModalStore.getState();
+
+    // 1. Custom override
+    if (action.onPress) {
+      action.onPress();
+      return;
+    }
+
+    // 2. Back
+    if (action.isBack || action.type === "BACK") {
+      get().goBack();
+      return;
+    }
+
+    // 3. Modal swap
+    if (
+      action.type === "MODAL_SWAP" &&
+      action.modalZone &&
+      action.modalComponent
+    ) {
+      modalStore.swapModal(action.modalZone, action.modalComponent);
+      return;
+    }
+
+    // 4. Navigation
+    if (action.type === "NAVIGATE" && action.nextScreenId) {
+      get().setScreen(action.nextScreenId, action.nextViewMode);
+      return;
+    }
   },
 
+  // ---------------- PRELOAD ----------------
   preloadScreen: (id) => {
     getCachedScreen(id);
   },
 
-  // 🔥 intelligent next-screen prediction
   predictNextScreen: (currentId) => {
     const state = get();
 
     const last = state.history[state.history.length - 1];
-
     if (last?.id) {
       screenPredictor.preload(last.id);
     }

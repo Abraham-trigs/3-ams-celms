@@ -3,32 +3,37 @@
 import { useZodiac } from "../store/zodiac.store";
 
 export function PrimaryActionButton() {
-  const { sharedAction, viewMode, executeSharedAction } = useZodiac();
+  const action = useZodiac((s) => s.sharedAction);
+  const viewMode = useZodiac((s) => s.viewMode);
 
-  if (!sharedAction) return null;
+  if (!action) return null;
 
-  // Logic to determine arrow direction based on action type or view mode
-  const getIcon = () => {
-    if (sharedAction.isBack) return "←";
-    return viewMode === "SPLIT" ? "↑" : "↓";
+  const execute = () => {
+    useZodiac.getState().executeSharedAction();
   };
+
+  const icon =
+    (action as any).icon ??
+    (action.isBack ? "←" : viewMode === "SPLIT" ? "↑" : "↓");
+
+  const borderColor = action.isBack ? "white" : "var(--zodiac-orange)";
 
   return (
     <button
-      onClick={executeSharedAction}
+      onClick={execute}
       className="glass-card flex items-center gap-3 active:scale-95 transition-all duration-200 group"
       style={{
         cursor: "pointer",
         color: "var(--zodiac-cyan)",
-        borderColor: sharedAction.isBack ? "white" : "var(--zodiac-orange)",
+        borderColor,
       }}
     >
       <span className="font-bold tracking-widest uppercase text-[11px]">
-        {sharedAction.label}
+        {action.label}
       </span>
 
       <div className="flex items-center justify-center bg-white/10 rounded-full w-5 h-5 group-hover:bg-white/20 transition-colors">
-        <span className="text-[10px] leading-none font-bold">{getIcon()}</span>
+        <span className="text-[10px] leading-none font-bold">{icon}</span>
       </div>
     </button>
   );

@@ -1,16 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useZodiac } from "../store/zodiac.store";
 import { useModalStore } from "../store/useModalStore";
-import { ZodiacScreen } from "../types/screen.types";
 
 // Components
 import { WelcomeTopModal } from "../modals/WelcomeTopModal";
 import { WelcomeAdModal } from "../modals/WelcomeAdModal";
 import { LoginOptionsModal } from "../modals/LoginOptionsModal";
 
-export const WelcomeScreen: ZodiacScreen = {
+export const WelcomeScreen = {
   id: "WELCOME",
   layoutMode: "SPLIT",
 
@@ -18,8 +17,14 @@ export const WelcomeScreen: ZodiacScreen = {
     const setSharedAction = useZodiac((s) => s.setSharedAction);
     const swapModal = useModalStore((s) => s.swapModal);
 
+    // 🔒 persistent guard across strict-mode remounts
+    const injectedRef = useRef(false);
+
     useEffect(() => {
-      // ---------------- INITIAL UI INJECTION ----------------
+      if (injectedRef.current) return;
+      injectedRef.current = true;
+
+      // ---------------- INITIAL INJECTION ----------------
       swapModal("TOP", WelcomeTopModal);
       swapModal("DOWN", WelcomeAdModal);
 
@@ -27,9 +32,6 @@ export const WelcomeScreen: ZodiacScreen = {
       setSharedAction({
         label: "Login to Profile",
         onPress: () => {
-          console.log("Swapping DOWN zone → LoginOptionsModal");
-
-          // clean replacement (no stacking, no ambiguity)
           swapModal("DOWN", LoginOptionsModal);
         },
       });
@@ -38,11 +40,10 @@ export const WelcomeScreen: ZodiacScreen = {
       return () => {
         setSharedAction(null);
 
-        // optional: clear only what this screen owns
-        swapModal("TOP", null);
-        swapModal("DOWN", null);
+        swapModal("TOP", null as any);
+        swapModal("DOWN", null as any);
       };
-    }, [setSharedAction, swapModal]);
+    }, [swapModal, setSharedAction]);
 
     return null;
   },
