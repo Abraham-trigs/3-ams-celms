@@ -1,41 +1,48 @@
-"use client";
+// "use client";
 
-import { useZodiac } from "../store/zodiac.store";
+// import { useProcessStore } from "../store/process.store";
 
-export function SecondaryActionButton() {
-  /**
-   * Subscribes to the secondary action state in the store.
-   * This button specifically handles internal modal swaps (Zone 1/2).
-   */
-  const { secondaryAction, executeSecondaryAction } = useZodiac();
+// interface SecondaryButtonProps {
+//   processId: string;
+//   label: string;
+//   nextStep: number; // Pass (currentStep + 1) for forward, (currentStep - 1) for back
+//   data?: Record<string, any>;
+//   isBack?: boolean; // Optional flag for styling/icons
+// }
 
-  // If the parent screen hasn't defined a secondary task, hide the button
-  if (!secondaryAction) return null;
+// export function SecondaryActionButton({
+//   processId,
+//   label,
+//   nextStep,
+//   data,
+//   isBack,
+// }: SecondaryButtonProps) {
+//   const { updateStep, updateData } = useProcessStore();
 
-  return (
-    <button
-      onClick={executeSecondaryAction}
-      className="glass-card flex items-center gap-3 active:scale-95 transition-all duration-200 group"
-      style={{
-        cursor: "pointer",
-        color: "var(--zodiac-white)", // White text to distinguish from Cyan primary
-        borderColor: "rgba(255, 255, 255, 0.2)", // Subtle border
-        opacity: 0.8,
-      }}
-    >
-      <span className="font-bold tracking-widest uppercase text-[10px]">
-        {secondaryAction.label}
-      </span>
+//   const handlePress = () => {
+//     // 1. Move the step (Back or Forward)
+//     updateStep(processId, nextStep);
 
-      {/* 
-         Visual indicator: 
-         Uses a simple '+' or '→' icon to signify an internal modal change 
-      */}
-      <div className="flex items-center justify-center bg-white/5 rounded-full w-4 h-4 group-hover:bg-white/10 transition-colors">
-        <span className="text-[10px] leading-none font-bold">
-          {secondaryAction.targetZone === "DOWN" ? "↓" : "→"}
-        </span>
-      </div>
-    </button>
-  );
-}
+//     // 2. Save data only if moving forward (usually don't save on back)
+//     if (data && !isBack) {
+//       updateData(processId, data);
+//     }
+//   };
+
+//   return (
+//     <button
+//       onClick={handlePress}
+//       className={`px-6 py-2 rounded-lg border active:scale-95 transition-all flex items-center gap-2 ${
+//         isBack ? "border-white/10 bg-transparent" : "border-white/20 bg-white/5"
+//       }`}
+//     >
+//       {isBack && <span className="text-[10px]">←</span>}
+
+//       <span className="text-[10px] font-bold uppercase tracking-widest">
+//         {label}
+//       </span>
+
+//       {!isBack && <span className="text-[10px]">→</span>}
+//     </button>
+//   );
+// }

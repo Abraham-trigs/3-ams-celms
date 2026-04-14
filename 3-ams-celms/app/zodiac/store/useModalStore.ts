@@ -1,27 +1,47 @@
+"use client";
+
 import { create } from "zustand";
 
-type ModalType =
-  | "CREATE_COMPANY"
-  | "CREATE_JOB"
-  | "COMPLETE_JOB"
-  | "WASTE_ENTRY"
-  | "PAYMENT"
-  | "STOCK_MOVEMENT"
-  | "ESTIMATE";
+/**
+ * We use React.ComponentType<any> to allow any valid
+ * React component to be stored and rendered.
+ */
+interface ModalState {
+  activeTopComponent: React.ComponentType<any> | null;
+  activeDownComponent: React.ComponentType<any> | null;
 
-type ModalState = {
-  type: ModalType | null;
-  data?: any;
+  // Set the specific component into the desired zone
+  openModal: (
+    zone: "TOP" | "DOWN",
+    component: React.ComponentType<any>,
+  ) => void;
 
-  openModal: (type: ModalType, data?: any) => void;
-  closeModal: () => void;
-};
+  // Clear a specific zone or both
+  closeModal: (zone: "TOP" | "DOWN") => void;
+  closeAll: () => void;
+}
 
 export const useModalStore = create<ModalState>((set) => ({
-  type: null,
-  data: null,
+  activeTopComponent: null,
+  activeDownComponent: null,
 
-  openModal: (type, data) => set({ type, data }),
+  openModal: (zone, component) =>
+    set((state) => ({
+      ...(zone === "TOP"
+        ? { activeTopComponent: component }
+        : { activeDownComponent: component }),
+    })),
 
-  closeModal: () => set({ type: null, data: null }),
+  closeModal: (zone) =>
+    set((state) => ({
+      ...(zone === "TOP"
+        ? { activeTopComponent: null }
+        : { activeDownComponent: null }),
+    })),
+
+  closeAll: () =>
+    set({
+      activeTopComponent: null,
+      activeDownComponent: null,
+    }),
 }));

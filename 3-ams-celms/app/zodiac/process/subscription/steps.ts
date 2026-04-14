@@ -1,8 +1,18 @@
-// app/zodiac/process/subscription/steps.ts
-import { SubscriptionStep } from "./types";
+// /process/subscription/steps.ts
 
-export const SUBSCRIPTION_STEPS: SubscriptionStep[] = [
-  { id: "IDENTITY", label: "Next: Set Location" },
-  { id: "LOCATION", label: "Next: Initial Stock" },
-  { id: "STOCK", label: "Complete Registration" },
+import { StepBlueprint } from "./types";
+
+export const SUBSCRIPTION_STEPS: StepBlueprint[] = [
+  {
+    id: "IDENTITY",
+    actions: ["cancel", "next"],
+  },
+  {
+    id: "LOCATION",
+    actions: ["back", "next"],
+  },
+  {
+    id: "STOCK",
+    actions: ["back", "next"],
+  },
 ];

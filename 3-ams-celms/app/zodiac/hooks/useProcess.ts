@@ -1,6 +1,5 @@
 // app/zodiac/hooks/useProcess.ts
-import { useEffect, useCallback } from "react";
-import { useZodiac } from "../store/zodiac.store";
+import { useCallback } from "react";
 import { useProcessStore } from "../store/process.store";
 
 export function useProcess(
@@ -8,34 +7,42 @@ export function useProcess(
   steps: { label: string }[],
   onComplete: (data: any) => void,
 ) {
-  const setSharedAction = useZodiac((s) => s.setSharedAction);
   const { getProcess, updateProcess } = useProcessStore();
 
   const { currentStep, data } = getProcess(processId);
 
-  // 1. Stable execution function
-  const handleAction = useCallback(() => {
-    if (currentStep === steps.length - 1) {
+  // Move forward
+  const next = useCallback(() => {
+    const isLast = currentStep >= steps.length - 1;
+
+    if (isLast) {
       onComplete(data);
-    } else {
-      updateProcess(processId, currentStep + 1, {});
+      return;
     }
-  }, [currentStep, data, steps.length, processId, updateProcess, onComplete]);
 
-  // 2. Only update the button when the step or label actually changes
-  useEffect(() => {
-    setSharedAction({
-      label: steps[currentStep].label,
-      onPress: handleAction,
-    });
+    updateProcess(processId, currentStep + 1, {});
+  }, [currentStep, steps.length, processId, updateProcess, onComplete, data]);
 
-    return () => setSharedAction(null);
-  }, [currentStep, handleAction, steps, setSharedAction]);
+  // Move backward
+  const back = useCallback(() => {
+    if (currentStep <= 0) return;
+    updateProcess(processId, currentStep - 1, {});
+  }, [currentStep, processId, updateProcess]);
+
+  // Update form data
+  const updateData = useCallback(
+    (newData: any) => {
+      updateProcess(processId, currentStep, newData);
+    },
+    [processId, currentStep, updateProcess],
+  );
 
   return {
     currentStep,
+    stepLabel: steps[currentStep]?.label,
     data,
-    updateData: (newData: any) =>
-      updateProcess(processId, currentStep, newData),
+    next,
+    back,
+    updateData,
   };
 }

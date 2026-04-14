@@ -1,12 +1,16 @@
+"use client";
+
+import { useModalStore } from "../store/usemodal.store";
 import { JobListModal } from "../modals/job/JobListModal";
 import { ClientModal } from "../modals/client/ClientModal";
 import { StockModal } from "../modals/stock/StockModal";
-import { useZodiac } from "../store/zodiac.store";
 
 export function DownModal() {
-  const { activeDownModal } = useZodiac();
+  const { state } = useModalStore();
 
-  switch (activeDownModal) {
+  const active = state.activeDownModal;
+
+  switch (active) {
     case "JOB_LIST":
       return <JobListModal />;
 
@@ -17,6 +21,6 @@ export function DownModal() {
       return <StockModal />;
 
     default:
-      return <JobListModal />;
+      return null; // IMPORTANT FIX
   }
 }

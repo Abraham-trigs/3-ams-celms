@@ -10,9 +10,9 @@ import { IdentityForm } from "./IdentityForm";
 import { LocationForm } from "./LocationForm";
 import { StockForm } from "../../ui/common/StockForm";
 
-/**
- * STEP REGISTRY (source of truth)
- */
+import { PrimaryActionButton } from "../../ui/Primary.Button";
+import { resolveProcessActions } from "../../process/subscription/resolver";
+
 const STEP_COMPONENTS = {
   IDENTITY: IdentityForm,
   LOCATION: LocationForm,
@@ -24,15 +24,10 @@ export const SubscriptionScreen = {
   layoutMode: "DETAIL",
 
   TopComponent: () => {
-    const { setScreen } = useZodiac();
-
-    const handleComplete = useCallback(
-      (finalData: SubscriptionData) => {
-        console.log("Saving Registration:", finalData);
-        setScreen("JOB_SELECTION", "SPLIT");
-      },
-      [setScreen],
-    );
+    const handleComplete = useCallback((finalData: SubscriptionData) => {
+      console.log("Saving Registration:", finalData);
+      useZodiac.getState().setScreen("JOB_SELECTION", "SPLIT");
+    }, []);
 
     const { currentStep, data, updateData } = useProcess(
       "SUBSCRIPTION",
@@ -41,13 +36,21 @@ export const SubscriptionScreen = {
     );
 
     const activeStepId = SUBSCRIPTION_STEPS[currentStep].id;
-
     const ActiveStep =
       STEP_COMPONENTS[activeStepId as keyof typeof STEP_COMPONENTS];
 
+    // =========================
+    // RESOLVER (single source of truth)
+    // =========================
+    const actions = resolveProcessActions({
+      stepIndex: currentStep,
+      steps: SUBSCRIPTION_STEPS,
+      data,
+    });
+
     return (
-      <div className="flex flex-col h-full gap-6">
-        {/* Progress */}
+      <div className="flex flex-col h-full gap-6 p-4">
+        {/* PROGRESS */}
         <div className="flex gap-2">
           {SUBSCRIPTION_STEPS.map((_, i) => (
             <div
@@ -59,8 +62,19 @@ export const SubscriptionScreen = {
           ))}
         </div>
 
-        {/* ✅ Single render path (no empty JSX risk ever again) */}
-        {ActiveStep ? <ActiveStep data={data} onUpdate={updateData} /> : null}
+        {/* STEP CONTENT */}
+        <div className="flex-1 overflow-y-auto">
+          {ActiveStep ? <ActiveStep data={data} onUpdate={updateData} /> : null}
+        </div>
+
+        {/* BUTTON BAR */}
+        <div className="flex justify-between items-center pt-4 border-t border-white/5">
+          {actions.cancel && <PrimaryActionButton action={actions.cancel} />}
+
+          {actions.back && <PrimaryActionButton action={actions.back} />}
+
+          {actions.next && <PrimaryActionButton action={actions.next} />}
+        </div>
       </div>
     );
   },

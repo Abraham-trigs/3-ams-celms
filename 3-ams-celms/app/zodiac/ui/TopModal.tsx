@@ -1,34 +1,33 @@
 "use client";
 
-import { useZodiac } from "../store/zodiac.store";
-import { JobCreateModal } from "../modals/job/JobCreateModal";
-import { WasteModal } from "../modals/waste/WasteModal";
-import { PaymentModal } from "../modals/payment/PaymentModal";
-import { WelcomeModal } from "../modals/welcome/WelcomeModal"; // Added WelcomeModal import
+import { create } from "zustand";
 
-export function TopModal() {
-  const { activeTopModal } = useZodiac();
+interface ModalStore {
+  TopComponent: React.ComponentType<any> | null;
+  DownComponent: React.ComponentType<any> | null;
 
-  /**
-   * OR logic ensures that if activeTopModal is null or empty,
-   * it falls back to the "WELCOME" case.
-   */
-  const currentModal = activeTopModal || "WELCOME";
-
-  switch (currentModal) {
-    case "WELCOME":
-      return <WelcomeModal />;
-
-    case "JOB_CREATE":
-      return <JobCreateModal />;
-
-    case "WASTE":
-      return <WasteModal />;
-
-    case "PAYMENT":
-      return <PaymentModal />;
-
-    default:
-      return null;
-  }
+  // Accept the actual Component as an argument
+  openModal: (
+    zone: "TOP" | "DOWN",
+    component: React.ComponentType<any>,
+  ) => void;
+  closeModal: (zone: "TOP" | "DOWN") => void;
+  closeAll: () => void;
 }
+
+export const useModalStore = create<ModalStore>((set) => ({
+  TopComponent: null,
+  DownComponent: null,
+
+  openModal: (zone, component) =>
+    set({
+      [zone === "TOP" ? "TopComponent" : "DownComponent"]: component,
+    }),
+
+  closeModal: (zone) =>
+    set({
+      [zone === "TOP" ? "TopComponent" : "DownComponent"]: null,
+    }),
+
+  closeAll: () => set({ TopComponent: null, DownComponent: null }),
+}));
