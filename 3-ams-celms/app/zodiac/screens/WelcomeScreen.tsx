@@ -16,37 +16,32 @@ export const WelcomeScreen = {
   TopComponent: () => {
     const setSharedAction = useZodiac((s) => s.setSharedAction);
     const swapModal = useModalStore((s) => s.swapModal);
-
-    // 🔒 persistent guard across strict-mode remounts
     const injectedRef = useRef(false);
 
     useEffect(() => {
       if (injectedRef.current) return;
       injectedRef.current = true;
 
-      // ---------------- INITIAL INJECTION ----------------
       swapModal("TOP", WelcomeTopModal);
       swapModal("DOWN", WelcomeAdModal);
 
-      // ---------------- ACTION BINDING ----------------
       setSharedAction({
         label: "Login to Profile",
-        onPress: () => {
-          swapModal("DOWN", LoginOptionsModal);
-        },
+        onPress: () => swapModal("DOWN", LoginOptionsModal),
       });
 
-      // ---------------- CLEANUP ----------------
       return () => {
         setSharedAction(null);
-
-        swapModal("TOP", null as any);
-        swapModal("DOWN", null as any);
+        // Clean up store when leaving Welcome
+        swapModal("TOP", null);
+        swapModal("DOWN", null);
       };
     }, [swapModal, setSharedAction]);
 
-    return null;
+    // 💡 FIX: Return the component directly here as a fallback
+    // so the Shell has something to paint on frame 1.
+    return <WelcomeTopModal />;
   },
 
-  DownComponent: () => null,
+  DownComponent: () => <WelcomeAdModal />, // 💡 FIX: Default this here too
 };

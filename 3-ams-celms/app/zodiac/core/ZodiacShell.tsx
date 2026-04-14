@@ -13,13 +13,11 @@ export function ZodiacShell() {
   const { activeScreenId, viewMode, sharedAction, setSharedAction, setScreen } =
     useZodiac();
 
-  // 1. MODAL LAYER
   const TopModal = useModalStore((s) => s.activeTopComponent);
   const DownModal = useModalStore((s) => s.activeDownComponent);
   const DetailModal = useModalStore((s) => s.activeDetailComponent);
   const GlobalModal = useModalStore((s) => s.activeGlobalComponent);
 
-  // 2. LAYOUT ENGINE
   const {
     isTransitioning,
     topHeightStyle,
@@ -28,7 +26,8 @@ export function ZodiacShell() {
     DownZoneComponent,
   } = resolveLayout(activeScreenId, viewMode);
 
-  // 3. ACTION & ROUTE SYNC
+  const isDetail = viewMode === "DETAIL";
+
   useEffect(() => {
     if (!sharedAction) return;
     sharedAction.onPress?.();
@@ -44,25 +43,18 @@ export function ZodiacShell() {
     return () => window.removeEventListener("popstate", syncFromUrl);
   }, [setScreen]);
 
-  // 4. CACHE & RENDER LOGIC
   const cached = getCachedScreen(activeScreenId);
   const TopRender = TopModal || cached.Top || TopZoneComponent;
   const DownRender = DownModal || cached.Down || DownZoneComponent;
 
-  useEffect(() => {
-    useZodiac.getState().predictNextScreen(activeScreenId);
-  }, [activeScreenId]);
-
   return (
     <div className="zodiac-shell flex flex-col h-full overflow-hidden bg-black text-white relative">
-      {/* GLOBAL MODALS */}
       {GlobalModal && (
         <div className="absolute inset-0 z-[100] bg-black/80 flex items-center justify-center">
           <GlobalModal />
         </div>
       )}
 
-      {/* DETAIL OVERLAY */}
       {DetailModal && (
         <div className="absolute inset-0 z-50 bg-black">
           <DetailModal />
@@ -74,7 +66,6 @@ export function ZodiacShell() {
       </header>
 
       <main className="flex-1 flex flex-col overflow-hidden relative">
-        {/* ZONE 1: TOP (The Expander) */}
         <section
           className={`zodiac-top transition-all duration-500 relative z-10 ${
             isTransitioning
@@ -88,14 +79,21 @@ export function ZodiacShell() {
           </div>
         </section>
 
-        {/* ZONE 2: DOWN (The Pushed Element) */}
-        {showDownZone && (
-          <section className="zodiac-down flex-1 overflow-hidden relative transition-all duration-500">
-            <div className="modal-box p-4 h-full">
-              {DownRender && <DownRender key={`down-${activeScreenId}`} />}
-            </div>
-          </section>
-        )}
+        <section
+          className="zodiac-down flex-1 overflow-hidden relative transition-all duration-500"
+          style={{
+            opacity: !showDownZone || isDetail ? 0 : 1,
+            transform:
+              !showDownZone || isDetail
+                ? "translateY(40px)"
+                : "translateY(0px)",
+            pointerEvents: !showDownZone || isDetail ? "none" : "auto",
+          }}
+        >
+          <div className="modal-box p-4 h-full">
+            {DownRender && <DownRender key={`down-${activeScreenId}`} />}
+          </div>
+        </section>
       </main>
 
       <footer className="mt-auto shrink-0">
