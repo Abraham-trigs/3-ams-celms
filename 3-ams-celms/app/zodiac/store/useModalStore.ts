@@ -1,19 +1,31 @@
 "use client";
 
 import { create } from "zustand";
+import { ComponentType } from "react";
 
-type ModalZone = "TOP" | "DOWN" | "DETAIL" | "GLOBAL";
+export type ModalZone = "TOP" | "DOWN" | "DETAIL" | "GLOBAL";
+export type ModalComponent = ComponentType<any> | null;
 
 interface ModalState {
-  activeTopComponent: React.ComponentType<any> | null;
-  activeDownComponent: React.ComponentType<any> | null;
-  activeDetailComponent: React.ComponentType<any> | null;
-  activeGlobalComponent: React.ComponentType<any> | null;
+  activeTopComponent: ModalComponent;
+  activeDownComponent: ModalComponent;
+  activeDetailComponent: ModalComponent;
+  activeGlobalComponent: ModalComponent;
 
-  openModal: (component: React.ComponentType<any>, zone?: ModalZone) => void;
+  swapModal: (zone: ModalZone, component: ModalComponent) => void;
+  openModal: (zone: ModalZone, component: ModalComponent) => void;
+
   closeModal: (zone: ModalZone) => void;
   closeAll: () => void;
 }
+
+// stable mapping (no re-creation per render)
+const keyMap: Record<ModalZone, keyof ModalState> = {
+  TOP: "activeTopComponent",
+  DOWN: "activeDownComponent",
+  DETAIL: "activeDetailComponent",
+  GLOBAL: "activeGlobalComponent",
+};
 
 export const useModalStore = create<ModalState>((set) => ({
   activeTopComponent: null,
@@ -21,28 +33,22 @@ export const useModalStore = create<ModalState>((set) => ({
   activeDetailComponent: null,
   activeGlobalComponent: null,
 
+  // ---------------- CORE SWAP ----------------
+  swapModal: (zone, component) => {
+    set({ [keyMap[zone]]: component } as Partial<ModalState>);
+  },
+
+  // ---------------- ALIAS (LEGACY FRIENDLY) ----------------
   openModal: (zone, component) => {
-    const keyMap: Record<ModalZone, keyof ModalState> = {
-      TOP: "activeTopComponent",
-      DOWN: "activeDownComponent",
-      DETAIL: "activeDetailComponent",
-      GLOBAL: "activeGlobalComponent",
-    };
-
-    set({ [keyMap[zone]]: component });
+    set({ [keyMap[zone]]: component } as Partial<ModalState>);
   },
 
+  // ---------------- CLOSE SINGLE ZONE ----------------
   closeModal: (zone) => {
-    const keyMap = {
-      TOP: "activeTopComponent",
-      DOWN: "activeDownComponent",
-      DETAIL: "activeDetailComponent",
-      GLOBAL: "activeGlobalComponent",
-    };
-
-    set({ [keyMap[zone]]: null });
+    set({ [keyMap[zone]]: null } as Partial<ModalState>);
   },
 
+  // ---------------- RESET ALL ZONES ----------------
   closeAll: () =>
     set({
       activeTopComponent: null,

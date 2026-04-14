@@ -5,7 +5,7 @@ import { useZodiac } from "../store/zodiac.store";
 import { useModalStore } from "../store/useModalStore";
 import { ZodiacScreen } from "../types/screen.types";
 
-// 1. IMPORT REAL COMPONENTS (No more strings)
+// Components
 import { WelcomeTopModal } from "../modals/WelcomeTopModal";
 import { WelcomeAdModal } from "../modals/WelcomeAdModal";
 import { LoginOptionsModal } from "../modals/LoginOptionsModal";
@@ -16,28 +16,34 @@ export const WelcomeScreen: ZodiacScreen = {
 
   TopComponent: () => {
     const setSharedAction = useZodiac((s) => s.setSharedAction);
-    const openModal = useModalStore((s) => s.openModal);
+    const swapModal = useModalStore((s) => s.swapModal);
 
     useEffect(() => {
-      // 2. INITIAL INJECTION: Pass the actual component functions
-      openModal("TOP", WelcomeTopModal);
-      openModal("DOWN", WelcomeAdModal);
+      // ---------------- INITIAL UI INJECTION ----------------
+      swapModal("TOP", WelcomeTopModal);
+      swapModal("DOWN", WelcomeAdModal);
 
-      // 3. CONFIGURE ACTION: Swap with the real Login component
+      // ---------------- ACTION BINDING ----------------
       setSharedAction({
         label: "Login to Profile",
         onPress: () => {
-          console.log(
-            "Direct Injection Swap: Replacing Ad with Login Options...",
-          );
-          openModal("DOWN", LoginOptionsModal);
+          console.log("Swapping DOWN zone → LoginOptionsModal");
+
+          // clean replacement (no stacking, no ambiguity)
+          swapModal("DOWN", LoginOptionsModal);
         },
       });
 
-      return () => setSharedAction(null);
-    }, [setSharedAction, openModal]);
+      // ---------------- CLEANUP ----------------
+      return () => {
+        setSharedAction(null);
 
-    // Controller returns null; visuals are handled by the injected components
+        // optional: clear only what this screen owns
+        swapModal("TOP", null);
+        swapModal("DOWN", null);
+      };
+    }, [setSharedAction, swapModal]);
+
     return null;
   },
 
