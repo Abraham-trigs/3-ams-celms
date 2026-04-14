@@ -1,9 +1,19 @@
-// app/zodiac/modals/WelcomeTopModal.tsx
 "use client";
 
-import { PrimaryActionButton } from "../ui/Primary.Button";
+import { useZodiac } from "../store/zodiac.store";
+import { ButtonAction } from "../store/zodiac.store";
 
 export function WelcomeTopModal() {
+  const setSharedAction = useZodiac((s) => s.setSharedAction);
+
+  const goToProfile = () => {
+    // 1. Trigger the immediate screen transition
+    useZodiac.getState().setScreen("USER_PROFILE");
+
+    // 2. Optional: Clear the footer action if it was set
+    setSharedAction(null);
+  };
+
   return (
     <div className="flex flex-col items-center justify-center h-full gap-8 px-6">
       {/* Logo */}
@@ -16,8 +26,13 @@ export function WelcomeTopModal() {
         Print Anywhere, At anytime & Lead
       </p>
 
-      {/* The Button (stays here to be rendered) */}
-      <PrimaryActionButton />
+      {/* ACTION BUTTON */}
+      <button
+        onClick={goToProfile}
+        className="px-5 py-2 rounded-lg bg-cyan-500 text-black font-semibold active:scale-95 transition"
+      >
+        Open Profile
+      </button>
     </div>
   );
 }

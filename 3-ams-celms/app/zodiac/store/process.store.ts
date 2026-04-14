@@ -2,19 +2,24 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { useZodiac } from "./zodiac.store";
 
 interface ProcessState {
   currentStep: number;
   data: Record<string, any>;
+  history: string[];
 }
 
 interface ProcessStore {
   sessions: Record<string, ProcessState>;
-
-  updateStep: (processId: string, step: number) => void;
+  updateStep: (
+    processId: string,
+    step: number,
+    targetScreenId?: string,
+  ) => void;
+  goBack: (processId: string) => void;
   updateData: (processId: string, newData: Record<string, any>) => void;
   resetProcess: (processId: string) => void;
-
   getProcess: (processId: string) => ProcessState;
 }
 
@@ -24,33 +29,91 @@ export const useProcessStore = create<ProcessStore>()(
       sessions: {},
 
       getProcess: (id) => {
-        return get().sessions[id] || { currentStep: 0, data: {} };
+        return get().sessions[id] || { currentStep: 0, data: {}, history: [] };
       },
 
-      updateStep: (id, step) =>
-        set((state) => {
-          const prev = state.sessions[id];
+      updateStep: (id, step, targetScreenId) => {
+        const currentScreen = useZodiac.getState().activeScreenId;
 
-          // 🚫 prevent useless updates
-          if (prev?.currentStep === step) return state;
+        // 1. Physical Navigation (Only if it's a new screen)
+        if (targetScreenId && targetScreenId !== currentScreen) {
+          useZodiac.getState().setScreen(targetScreenId as any);
+        }
+
+        // 2. Update Progress & History
+        set((state) => {
+          const prev = state.sessions[id] || {
+            currentStep: 0,
+            data: {},
+            history: [],
+          };
+
+          // 🔥 Only add to history if we are actually leaving the current screen
+          const isNewScreen =
+            targetScreenId && targetScreenId !== currentScreen;
+          const newHistory = isNewScreen
+            ? [...prev.history, currentScreen]
+            : prev.history;
 
           return {
             sessions: {
               ...state.sessions,
               [id]: {
-                ...(prev || { data: {} }),
+                ...prev,
                 currentStep: step,
+                history: newHistory,
               },
             },
           };
-        }),
+        });
+      },
+
+      goBack: (id) => {
+        const session = get().sessions[id];
+        if (!session) return;
+
+        // 🔥 Case A: Internal step back (stay on same screen)
+        if (
+          session.currentStep > 0 &&
+          session.history.length <= session.currentStep
+        ) {
+          set((state) => ({
+            sessions: {
+              ...state.sessions,
+              [id]: { ...session, currentStep: session.currentStep - 1 },
+            },
+          }));
+          return;
+        }
+
+        // 🔥 Case B: Screen back (requires navigation)
+        const newHistory = [...session.history];
+        const lastScreen = newHistory.pop();
+
+        if (lastScreen) {
+          useZodiac.getState().setScreen(lastScreen as any);
+        }
+
+        set((state) => ({
+          sessions: {
+            ...state.sessions,
+            [id]: {
+              ...session,
+              currentStep: Math.max(0, session.currentStep - 1),
+              history: newHistory,
+            },
+          },
+        }));
+      },
 
       updateData: (id, newData) =>
         set((state) => {
-          const prev = state.sessions[id];
-          const prevData = prev?.data || {};
-
-          // shallow compare → avoid unnecessary writes
+          const prev = state.sessions[id] || {
+            currentStep: 0,
+            data: {},
+            history: [],
+          };
+          const prevData = prev.data;
           const hasChange = Object.keys(newData).some(
             (key) => prevData[key] !== newData[key],
           );
@@ -60,21 +123,15 @@ export const useProcessStore = create<ProcessStore>()(
           return {
             sessions: {
               ...state.sessions,
-              [id]: {
-                ...(prev || { currentStep: 0 }),
-                data: { ...prevData, ...newData },
-              },
+              [id]: { ...prev, data: { ...prevData, ...newData } },
             },
           };
         }),
 
       resetProcess: (id) =>
         set((state) => {
-          if (!state.sessions[id]) return state;
-
           const newSessions = { ...state.sessions };
           delete newSessions[id];
-
           return { sessions: newSessions };
         }),
     }),

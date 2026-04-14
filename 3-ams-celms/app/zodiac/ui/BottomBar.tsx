@@ -1,4 +1,10 @@
+"use client";
+
+import { useZodiac } from "../store/zodiac.store";
+
 export function BottomBar() {
+  const setScreen = useZodiac((s) => s.setScreen);
+
   return (
     <nav className="zodiac-bottombar px-8">
       {/* Messages */}
@@ -7,8 +13,13 @@ export function BottomBar() {
         <div className="badge">2</div>
       </div>
 
-      {/* Home */}
-      <div className="cursor-pointer text-3xl">🏠</div>
+      {/* Home - Always Navigates to Welcome */}
+      <div
+        className="cursor-pointer text-3xl transition-transform active:scale-90"
+        onClick={() => setScreen("WELCOME")}
+      >
+        🏠
+      </div>
 
       {/* Cart with Orange Circle */}
       <div className="relative cursor-pointer p-2 border-2 border-orange-500 rounded-full bg-blue-900/50">

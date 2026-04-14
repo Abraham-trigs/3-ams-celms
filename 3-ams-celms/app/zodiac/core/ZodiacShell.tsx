@@ -28,11 +28,11 @@ export function ZodiacShell() {
 
   const isDetail = viewMode === "DETAIL";
 
-  useEffect(() => {
-    if (!sharedAction) return;
-    sharedAction.onPress?.();
-    setSharedAction(null);
-  }, [sharedAction, setSharedAction]);
+  // useEffect(() => {
+  //   if (!sharedAction) return;
+  //   sharedAction.onPress?.();
+  //   setSharedAction(null);
+  // }, [sharedAction, setSharedAction]);
 
   useEffect(() => {
     const syncFromUrl = () => {

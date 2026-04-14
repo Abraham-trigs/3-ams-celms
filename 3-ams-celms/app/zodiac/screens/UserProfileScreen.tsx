@@ -1,26 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
 import { useZodiac } from "../store/zodiac.store";
 import { ZodiacScreen } from "../types/screen.types";
-import { PrimaryActionButton } from "../ui/Primary.Button";
 
 export const UserProfileScreen: ZodiacScreen = {
   id: "USER_PROFILE",
   layoutMode: "DETAIL",
   TopComponent: () => {
-    // 1. Pull setScreen from the store
-    const { setSharedAction, setScreen } = useZodiac();
-
-    useEffect(() => {
-      setSharedAction({
-        label: "Back",
-        isBack: true,
-        onPress: () => console.log("Exiting profile..."),
-      });
-
-      return () => setSharedAction(null);
-    }, [setSharedAction]);
+    const { setScreen } = useZodiac();
 
     return (
       <div className="flex flex-col h-full gap-6">
@@ -49,10 +36,10 @@ export const UserProfileScreen: ZodiacScreen = {
           </div>
         </div>
 
-        {/* 3. Settings List (Updated with Subscription) */}
-        <div className="flex flex-col gap-2 mt-4">
+        {/* 3. Settings List */}
+        <div className="flex flex-col gap-2 mt-4 overflow-y-auto">
           {[
-            { label: "Subscription", icon: "✨", id: "SUBSCRIPTION" }, // Added Subscription
+            { label: "Subscription", icon: "✨", id: "SUBSCRIPTION" },
             { label: "Notification Settings", icon: "🔔" },
             { label: "Payment Methods", icon: "💳" },
             { label: "Security & Privacy", icon: "🔒" },
@@ -60,7 +47,7 @@ export const UserProfileScreen: ZodiacScreen = {
           ].map((item, i) => (
             <div
               key={i}
-              onClick={() => item.id && setScreen(item.id as any)} // Trigger screen change
+              onClick={() => item.id && setScreen(item.id as any)}
               className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-3">
@@ -80,18 +67,17 @@ export const UserProfileScreen: ZodiacScreen = {
           ))}
         </div>
 
-        {/* 4. THE REUSABLE BUTTON */}
-        <div className="mt-auto pb-4 flex justify-center">
-          <PrimaryActionButton />
+        {/* 4. NEW NAVIGATOR BUTTON (Talks to Store) */}
+        <div className="mt-auto pb-4 px-2">
+          <button
+            onClick={() => setScreen("WELCOME")}
+            className="w-full py-4 rounded-2xl bg-white/10 border border-white/20 text-white font-bold uppercase tracking-widest text-xs hover:bg-white/20 transition-all active:scale-95"
+          >
+            ← Back to Home
+          </button>
         </div>
       </div>
     );
   },
-
   DownComponent: undefined,
-
-  primaryAction: {
-    label: "Back",
-    isBack: true,
-  },
 };

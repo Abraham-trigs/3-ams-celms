@@ -8,7 +8,6 @@ interface StockFormProps {
 }
 
 export function StockForm({ data, onUpdate }: StockFormProps) {
-  // Common print materials to help the user get started (Feature 7.3)
   const initialCategories = [
     { name: "Standard A4 Paper", unit: "Reams", key: "paper_a4" },
     { name: "Large Format Vinyl", unit: "Yards", key: "vinyl_lf" },
@@ -21,13 +20,15 @@ export function StockForm({ data, onUpdate }: StockFormProps) {
     const existingIndex = currentStocks.findIndex((s) => s.itemName === key);
 
     const newStocks = [...currentStocks];
+    const numericValue = parseInt(value) || 0;
+
     if (existingIndex > -1) {
-      newStocks[existingIndex].quantity = parseInt(value) || 0;
+      newStocks[existingIndex].quantity = numericValue;
     } else {
       const cat = initialCategories.find((c) => c.key === key);
       newStocks.push({
         itemName: key,
-        quantity: parseInt(value) || 0,
+        quantity: numericValue,
         unit: cat?.unit || "units",
       });
     }
@@ -46,30 +47,39 @@ export function StockForm({ data, onUpdate }: StockFormProps) {
       </div>
 
       <div className="flex flex-col gap-4">
-        {initialCategories.map((item) => (
-          <div
-            key={item.key}
-            className="glass-card bg-white/5 p-4 flex flex-col gap-3 border-white/5"
-          >
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-bold">{item.name}</span>
-              <span className="text-[10px] opacity-40 uppercase">
-                {item.unit}
-              </span>
+        {initialCategories.map((item) => {
+          // 🔥 Find existing value in the store for this specific item
+          const currentValue = data.stocks?.find(
+            (s) => s.itemName === item.key,
+          )?.quantity;
+
+          return (
+            <div
+              key={item.key}
+              className="glass-card bg-white/5 p-4 flex flex-col gap-3 border border-white/5"
+            >
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-bold">{item.name}</span>
+                <span className="text-[10px] opacity-40 uppercase">
+                  {item.unit}
+                </span>
+              </div>
+              <div className="relative">
+                <input
+                  type="number"
+                  // 🔥 Controlled input: shows value from store or empty string
+                  value={currentValue !== undefined ? currentValue : ""}
+                  onChange={(e) => handleStockChange(item.key, e.target.value)}
+                  className="w-full bg-blue-950/50 border border-white/10 rounded-xl h-12 px-4 text-cyan-400 font-mono outline-none focus:border-orange-500 transition-all"
+                  placeholder={`0 ${item.unit}`}
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] opacity-30">
+                  Current Level
+                </span>
+              </div>
             </div>
-            <div className="relative">
-              <input
-                type="number"
-                onChange={(e) => handleStockChange(item.key, e.target.value)}
-                className="w-full bg-blue-950/50 border border-white/10 rounded-xl h-12 px-4 text-cyan-400 font-mono outline-none focus:border-orange-500 transition-all"
-                placeholder={`0 ${item.unit}`}
-              />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] opacity-30">
-                Current Level
-              </span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-2xl">

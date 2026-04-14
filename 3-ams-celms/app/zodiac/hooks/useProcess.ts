@@ -1,48 +1,53 @@
-// app/zodiac/hooks/useProcess.ts
+"use client";
+
 import { useCallback } from "react";
 import { useProcessStore } from "../store/process.store";
 
 export function useProcess(
   processId: string,
-  steps: { label: string }[],
+  steps: { id: string; label: string }[],
   onComplete: (data: any) => void,
 ) {
-  const { getProcess, updateProcess } = useProcessStore();
+  // 1. Correct the method names to match your Store
+  const {
+    sessions,
+    updateStep,
+    updateData: storeUpdateData,
+  } = useProcessStore();
 
-  const { currentStep, data } = getProcess(processId);
+  const session = sessions[processId] || {
+    currentStep: 0,
+    data: {},
+    history: [],
+  };
+  const { currentStep, data } = session;
 
-  // Move forward
-  const next = useCallback(() => {
-    const isLast = currentStep >= steps.length - 1;
-
-    if (isLast) {
-      onComplete(data);
-      return;
-    }
-
-    updateProcess(processId, currentStep + 1, {});
-  }, [currentStep, steps.length, processId, updateProcess, onComplete, data]);
-
-  // Move backward
-  const back = useCallback(() => {
-    if (currentStep <= 0) return;
-    updateProcess(processId, currentStep - 1, {});
-  }, [currentStep, processId, updateProcess]);
-
-  // Update form data
+  // Sync data updates
   const updateData = useCallback(
     (newData: any) => {
-      updateProcess(processId, currentStep, newData);
+      storeUpdateData(processId, newData);
     },
-    [processId, currentStep, updateProcess],
+    [processId, storeUpdateData],
+  );
+
+  // Note: 'next' and 'back' are now handled by ProcessStepButton,
+  // but we keep them here for internal logic if needed.
+  const next = useCallback(
+    (targetScreen?: string) => {
+      const isLast = currentStep >= steps.length - 1;
+      if (isLast) {
+        onComplete(data);
+        return;
+      }
+      updateStep(processId, currentStep + 1, targetScreen);
+    },
+    [currentStep, steps.length, processId, updateStep, onComplete, data],
   );
 
   return {
     currentStep,
-    stepLabel: steps[currentStep]?.label,
     data,
-    next,
-    back,
     updateData,
+    next,
   };
 }

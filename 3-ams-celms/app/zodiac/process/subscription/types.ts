@@ -1,5 +1,3 @@
-// app/zodiac/process/subscription/types.ts
-
 /**
  * =========================
  * ENGINE LAYER (FLOW CONTROL)
@@ -8,30 +6,17 @@
 
 export type ProcessActionType = "next" | "back" | "cancel";
 
-export type SubscriptionStepId = "IDENTITY" | "LOCATION" | "STOCK";
+// 🔥 UPDATED: Added 'PLANS' to the Step IDs
+export type SubscriptionStepId = "IDENTITY" | "LOCATION" | "PLANS" | "STOCK";
 
 /**
  * Single step definition (workflow engine)
  */
 export interface StepBlueprint {
   id: SubscriptionStepId;
-
-  /**
-   * Allowed actions in this step
-   * (drives which buttons are shown)
-   */
   actions: ProcessActionType[];
-
-  /**
-   * Optional lifecycle hooks
-   */
   onEnter?: () => void;
   onExit?: () => void;
-
-  /**
-   * Optional guard before moving forward
-   * IMPORTANT: only applies to "next"
-   */
   canProceed?: (data: SubscriptionData) => boolean;
 }
 
@@ -57,6 +42,9 @@ export interface SubscriptionData {
   logoUrl?: string;
   digitalAddress?: string;
   locationUrl?: string;
+
+  // 🔥 UPDATED: Added planId to track the selected subscription tier
+  planId?: "FREE" | "DOMINATE" | "GROW";
 
   stocks?: Array<{
     itemName: string;
