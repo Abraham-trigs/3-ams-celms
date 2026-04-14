@@ -1,20 +1,29 @@
 import { ReactNode } from "react";
 import { ViewMode } from "../store/zodiac.store";
+import { ScreenID } from "../view/screen.registry";
 
 export interface ScreenAction {
   label: string;
-  // This allows the button to handle the next state transition
-  nextScreenId?: string;
+  nextScreenId?: ScreenID; // Use ScreenID for safety
   nextViewMode?: ViewMode;
   onPress?: () => void;
 }
 
 export interface ZodiacScreen {
-  id: string;
+  id: ScreenID; // Matches your registry keys
   layoutMode: ViewMode;
-  // Fragments that will be injected into the Shell slots
+
+  /**
+   * Components act as "Controllers" or "Views".
+   * With our new injection strategy, these can return null if they
+   * are just using useEffect to open modals.
+   */
   TopComponent: React.FC;
   DownComponent?: React.FC;
-  // The configuration for the universal Primary Button
-  primaryAction: ScreenAction;
+
+  /**
+   * primaryAction is the default config, though screens usually
+   * override this via setSharedAction in a useEffect.
+   */
+  primaryAction?: ScreenAction;
 }

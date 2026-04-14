@@ -1,26 +1,17 @@
-"use client";
+// "use client";
 
-import { useModalStore } from "../store/usemodal.store";
-import { JobListModal } from "../modals/job/JobListModal";
-import { ClientModal } from "../modals/client/ClientModal";
-import { StockModal } from "../modals/stock/StockModal";
+// import { useModalStore } from "../store/useModalStore";
 
-export function DownModal() {
-  const { state } = useModalStore();
+// export function DownModal() {
+//   // Get the component itself from the store
+//   const ActiveComponent = useModalStore((s) => s.activeDownComponent);
 
-  const active = state.activeDownModal;
+//   if (!ActiveComponent) return null;
 
-  switch (active) {
-    case "JOB_LIST":
-      return <JobListModal />;
-
-    case "CLIENT_LIST":
-      return <ClientModal />;
-
-    case "STOCK_VIEW":
-      return <StockModal />;
-
-    default:
-      return null; // IMPORTANT FIX
-  }
-}
+//   return (
+//     <div className="down-modal-wrapper h-full w-full relative overflow-hidden">
+//       {/* Renders the injected component as a child */}
+//       <ActiveComponent />
+//     </div>
+//   );
+// }

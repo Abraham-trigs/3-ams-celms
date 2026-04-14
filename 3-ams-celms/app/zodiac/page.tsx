@@ -1,71 +1,64 @@
 "use client";
 
 import { useZodiac } from "./store/zodiac.store";
+import { useModalStore } from "./store/useModalStore"; // Listen to injections
 import { resolveLayout } from "./view/layout.engine";
 import { TopBar } from "./ui/TopBar";
 import { BottomBar } from "./ui/BottomBar";
 
 export default function ZodiacPage() {
   const { activeScreenId, viewMode } = useZodiac();
-  const layout = resolveLayout(activeScreenId, viewMode);
 
+  // 1. Get the Hand-Picked components from the store
+  const { activeTopComponent: InjectedTop, activeDownComponent: InjectedDown } =
+    useModalStore();
+
+  const layout = resolveLayout(activeScreenId, viewMode);
   const isDetail = viewMode === "DETAIL";
 
-  // Explicit heights to ensure the browser doesn't "guess" the layout
+  // 2. PRIORITY: Injected Component > Default Screen Component
+  const TopContent = InjectedTop || layout.TopZoneComponent;
+  const DownContent = InjectedDown || layout.DownZoneComponent;
+
   const topH = isDetail ? "100%" : "45%";
   const downH = isDetail ? "0%" : "55%";
 
   return (
-    <div className="zodiac-shell">
-      <header className="zodiac-topbar pt-2">
+    <div className="zodiac-shell flex flex-col h-full bg-black text-white overflow-hidden">
+      <header className="zodiac-topbar pt-2 shrink-0">
         <TopBar />
       </header>
 
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* ZONE 1: TOP MODAL (The Expander) */}
+      <main className="flex-1 flex flex-col overflow-hidden relative">
+        {/* ZONE 1: TOP (The Expander) */}
         <section
-          className="zodiac-top"
-          style={{
-            height: topH,
-            zIndex: 2, // Keep this on top so it "covers" the bottom as it grows
-          }}
+          className="zodiac-top transition-all duration-500 relative z-10"
+          style={{ height: topH }}
         >
           <div className="modal-box p-4 h-full">
-            <div className="h-full w-full overflow-hidden">
-              {layout.TopZoneComponent && <layout.TopZoneComponent />}
-            </div>
+            {TopContent && <TopContent />}
           </div>
         </section>
 
-        {/* ZONE 2: DOWN MODAL (The Pushed Element) */}
-        <section
-          className="zodiac-down"
-          style={{
-            height: downH,
-            opacity: isDetail ? 0 : 1,
-            // Both modes now use the push/pull transform
-            transform: isDetail ? "translateY(40px)" : "translateY(0px)",
-            // Slight delay when opening to let Top Modal lead the "push"
-            transitionDelay: isDetail ? "0.05s" : "0.05s",
-            paddingTop: isDetail ? 0 : 10,
-            paddingBottom: isDetail ? 0 : 10,
-            overflow: "hidden",
-            pointerEvents: isDetail ? "none" : "auto",
-          }}
-        >
-          <div className="modal-box p-4 h-full">
-            <div
-              className={`h-full w-full transition-opacity duration-300 ${
-                isDetail ? "opacity-0" : "opacity-100"
-              }`}
-            >
-              {layout.DownZoneComponent && <layout.DownZoneComponent />}
+        {/* ZONE 2: DOWN (The Pushed Element) */}
+        {!isDetail && (
+          <section
+            className="zodiac-down transition-all duration-500"
+            style={{
+              height: downH,
+              opacity: isDetail ? 0 : 1,
+              transform: isDetail ? "translateY(40px)" : "translateY(0px)",
+              pointerEvents: isDetail ? "none" : "auto",
+            }}
+          >
+            <div className="modal-box p-4 h-full">
+              {DownContent && <DownContent />}
             </div>
-          </div>
-        </section>
+          </section>
+        )}
       </main>
 
-      <footer className="mt-auto">
+      <footer className="mt-auto shrink-0">
         <BottomBar />
       </footer>
     </div>

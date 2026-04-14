@@ -1,47 +1,64 @@
-("use client");
+"use client";
 
-import { useEffect } from "react"; // ✅ MUST ADD THIS
+import { useEffect } from "react";
 import { useZodiac } from "../store/zodiac.store";
-import { executeAction } from "../router/action.router"; // ✅ MUST ADD THIS
-import { TopBar } from "../ui/TopBar";
-import { TopModal } from "../ui/TopModal";
-import { DownModal } from "../ui/DownModal";
+import { useModalStore } from "../store/useModalStore";
 import { resolveLayout } from "../view/layout.engine";
+import { TopBar } from "../ui/TopBar";
 
 export function ZodiacShell() {
-  const state = useZodiac();
-  const { sharedAction, setSharedAction } = state;
-  const layout = resolveLayout(state);
+  const { activeScreenId, viewMode, sharedAction, executeSharedAction } =
+    useZodiac();
 
-  /**
-   * ⚡️ CRITICAL FIX: The Bridge
-   * Without this, your buttons will still do nothing.
-   */
+  // 1. Get the components directly from the store (Priority/Hand-picked)
+  const TopModal = useModalStore((s) => s.activeTopComponent);
+  const DownModal = useModalStore((s) => s.activeDownComponent);
+  const DetailModal = useModalStore((s) => s.activeDetailComponent);
+  const GlobalModal = useModalStore((s) => s.activeGlobalComponent);
+
+  // 2. Get default components from the screen registry
+  const { topHeightStyle, showDownZone, TopZoneComponent, DownZoneComponent } =
+    resolveLayout(activeScreenId, viewMode);
+
   useEffect(() => {
-    if (!sharedAction) return;
-    executeAction(sharedAction);
-    setSharedAction(null);
-  }, [sharedAction, setSharedAction]);
+    if (sharedAction) executeSharedAction();
+  }, [sharedAction, executeSharedAction]);
 
   return (
-    <div className="zodiac-shell flex flex-col h-full bg-black overflow-hidden">
-      <div className="zodiac-topbar shrink-0">
-        <TopBar />
-      </div>
+    <div className="zodiac-shell relative flex flex-col h-full overflow-hidden bg-black text-white">
+      {/* LAYER 4: GLOBAL */}
+      {GlobalModal && (
+        <div className="absolute inset-0 z-[100] bg-black/80 flex items-center justify-center">
+          <GlobalModal />
+        </div>
+      )}
 
-      {/* TOP ZONE */}
+      {/* LAYER 3: DETAIL */}
+      {DetailModal && (
+        <div className="absolute inset-0 z-50 bg-black">
+          <DetailModal />
+        </div>
+      )}
+
+      <TopBar />
+
+      {/* LAYER 1: TOP ZONE */}
       <div
-        className={`zodiac-top transition-all duration-500 ${
-          layout.layout === "DETAIL_MODE" ? "h-full" : "h-[40%]"
-        }`}
+        className="zodiac-top transition-all duration-500 overflow-hidden relative"
+        style={{ height: topHeightStyle }}
       >
-        <TopModal />
+        {/* Priority: Modal > Default Screen Component */}
+        {TopModal ? <TopModal /> : TopZoneComponent && <TopZoneComponent />}
       </div>
 
-      {/* DOWN ZONE */}
-      {layout.layout !== "DETAIL_MODE" && (
-        <div className="zodiac-down flex-1">
-          <DownModal />
+      {/* LAYER 2: DOWN ZONE */}
+      {showDownZone && (
+        <div className="zodiac-down flex-1 overflow-hidden relative">
+          {DownModal ? (
+            <DownModal />
+          ) : (
+            DownZoneComponent && <DownZoneComponent />
+          )}
         </div>
       )}
     </div>

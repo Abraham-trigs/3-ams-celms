@@ -1,57 +1,61 @@
-// app/zodiac/store/modal.store.ts
 "use client";
 
 import { create } from "zustand";
+import { ComponentType } from "react";
+import { ModalZone } from "../types/view.types";
 
-export type ModalZone = "TOP" | "DOWN";
+interface ModalState {
+  activeTopComponent: ComponentType<any> | null;
+  activeDownComponent: ComponentType<any> | null;
+  activeDetailComponent: ComponentType<any> | null;
+  activeGlobalComponent: ComponentType<any> | null;
 
-/**
- * Define all allowed modals here for safety
- * (this prevents string chaos later)
- */
-export type TopModalId = "WELCOME" | "JOB_CREATE" | "WASTE" | "PAYMENT" | null;
+  /**
+   * openModal: Injects a physical React component into a specific zone.
+   * Storing the component reference directly ensures the Shell can render it
+   * as a primary child immediately.
+   */
+  openModal: (zone: ModalZone, component: ComponentType<any>) => void;
 
-export type DownModalId = "JOB_LIST" | "CLIENT_LIST" | "STOCK_VIEW" | null;
-
-interface ModalStore {
-  activeTopModal: TopModalId;
-  activeDownModal: DownModalId;
-
-  openModal: (zone: ModalZone, modalId: string) => void;
   closeModal: (zone: ModalZone) => void;
   closeAll: () => void;
-
-  setTopModal: (id: TopModalId) => void;
-  setDownModal: (id: DownModalId) => void;
 }
 
-export const useModalStore = create<ModalStore>((set) => ({
-  activeTopModal: "WELCOME",
-  activeDownModal: "JOB_LIST",
+export const useModalStore = create<ModalState>((set) => ({
+  activeTopComponent: null,
+  activeDownComponent: null,
+  activeDetailComponent: null,
+  activeGlobalComponent: null,
 
-  openModal: (zone, modalId) => {
+  openModal: (zone, component) =>
     set((state) => ({
-      ...(zone === "TOP"
-        ? { activeTopModal: modalId as TopModalId }
-        : { activeDownModal: modalId as DownModalId }),
-    }));
-  },
+      ...state,
+      [zone === "TOP"
+        ? "activeTopComponent"
+        : zone === "DOWN"
+          ? "activeDownComponent"
+          : zone === "DETAIL"
+            ? "activeDetailComponent"
+            : "activeGlobalComponent"]: component,
+    })),
 
-  closeModal: (zone) => {
+  closeModal: (zone) =>
     set((state) => ({
-      ...(zone === "TOP"
-        ? { activeTopModal: null }
-        : { activeDownModal: null }),
-    }));
-  },
+      ...state,
+      [zone === "TOP"
+        ? "activeTopComponent"
+        : zone === "DOWN"
+          ? "activeDownComponent"
+          : zone === "DETAIL"
+            ? "activeDetailComponent"
+            : "activeGlobalComponent"]: null,
+    })),
 
-  closeAll: () => {
+  closeAll: () =>
     set({
-      activeTopModal: null,
-      activeDownModal: null,
-    });
-  },
-
-  setTopModal: (id) => set({ activeTopModal: id }),
-  setDownModal: (id) => set({ activeDownModal: id }),
+      activeTopComponent: null,
+      activeDownComponent: null,
+      activeDetailComponent: null,
+      activeGlobalComponent: null,
+    }),
 }));
