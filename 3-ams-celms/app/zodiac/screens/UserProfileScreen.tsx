@@ -4,7 +4,7 @@ import { useZodiac } from "../store/zodiac.store";
 import { ZodiacScreen } from "../types/screen.types";
 
 export const UserProfileScreen: ZodiacScreen = {
-  id: "USER_PROFILE",
+  id: "USER_PROFLE",
   layoutMode: "DETAIL",
   TopComponent: () => {
     const { setScreen } = useZodiac();

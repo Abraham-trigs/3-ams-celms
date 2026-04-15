@@ -5,9 +5,9 @@ import { useZodiac } from "../store/zodiac.store";
 import { useModalStore } from "../store/useModalStore";
 
 // Components
-import { WelcomeTopModal } from "../modals/WelcomeTopModal";
-import { WelcomeAdModal } from "../modals/WelcomeAdModal";
-import { LoginOptionsModal } from "../modals/LoginOptionsModal";
+import { WelcomeTopModal } from "./modals/WelcomeTopModal";
+import { WelcomeAdModal } from "./modals/WelcomeAdModal";
+import { LoginOptionsModal } from "./modals/LoginOptionsModal";
 
 export const WelcomeScreen = {
   id: "WELCOME",

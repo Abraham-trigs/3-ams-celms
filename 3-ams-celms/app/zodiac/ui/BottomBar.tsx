@@ -21,8 +21,11 @@ export function BottomBar() {
         🏠
       </div>
 
-      {/* Cart with Orange Circle */}
-      <div className="relative cursor-pointer p-2 border-2 border-orange-500 rounded-full bg-blue-900/50">
+      {/* Cart with Orange Circle - Now navigates to Job Manager */}
+      <div
+        className="relative cursor-pointer p-2 border-2 border-orange-500 rounded-full bg-blue-900/50 transition-transform active:scale-90"
+        onClick={() => setScreen("JOB_CART")}
+      >
         <div className="text-2xl">🛒</div>
         <div className="badge">5</div>
       </div>

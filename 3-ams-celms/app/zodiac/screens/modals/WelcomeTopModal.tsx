@@ -1,6 +1,6 @@
 "use client";
 
-import { useZodiac } from "../store/zodiac.store";
+import { useZodiac } from "../../store/zodiac.store";
 import { ButtonAction } from "../store/zodiac.store";
 
 export function WelcomeTopModal() {

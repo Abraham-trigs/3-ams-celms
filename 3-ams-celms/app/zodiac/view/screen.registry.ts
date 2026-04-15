@@ -1,7 +1,8 @@
-import { JobSelectionScreen } from "../screens/JobSelection";
+// import { JobSelectionScreen } from "../screens/JobCartScreen";
 import { WelcomeScreen } from "../screens/WelcomeScreen";
 import { UserProfileScreen } from "../screens/UserProfileScreen";
 import { SubscriptionScreen } from "../screens/subscription/SubscriptionScreen";
+import { JobCartScreen } from "../screens/JobCartScreen"; // 1. Import the new screen
 import { ZodiacScreen } from "../types/screen.types";
 
 /**
@@ -9,9 +10,10 @@ import { ZodiacScreen } from "../types/screen.types";
  */
 export const SCREEN_MAP = {
   WELCOME: WelcomeScreen,
-  JOB_SELECTION: JobSelectionScreen,
+  // JOB_SELECTION: JobSelectionScreen,
   USER_PROFILE: UserProfileScreen,
   SUBSCRIPTION: SubscriptionScreen,
+  JOB_CART: JobCartScreen, // 2. Register the ID
 } as const satisfies Record<string, ZodiacScreen>;
 
 /**
