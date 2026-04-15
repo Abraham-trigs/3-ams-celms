@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useModalStore } from "../store/useModalStore";
+import { useModalStore } from "../../store/useModalStore";
 
 export function WastePromptModal({
   job,

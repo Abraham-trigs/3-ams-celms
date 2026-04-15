@@ -2,37 +2,22 @@
 
 import { useState } from "react";
 import { useZodiac } from "../store/zodiac.store";
-import { useDataStore } from "../store/useDataStore"; // Ensure this matches your filename
+import { useDataStore } from "../store/useDataStore";
 import { useModalStore } from "../store/useModalStore";
 import { ZodiacScreen } from "../types/screen.types";
 import { JobCreationModal } from "./modals/JobCreationModal";
-import { Skeleton } from "../components/common/Skeleton";
+import { JobDetailsModal } from "./modals/JobDetailsModal"; // ✅ Import the details modal
+import { JobCardSkeleton } from "../components/common/skeleton/JobCardSkeleton";
+import { RefreshButton } from "../components/common/RefreshButton";
 
 export const JobCartScreen: ZodiacScreen = {
   id: "JOB_CART",
   layoutMode: "DETAIL",
   TopComponent: () => {
     const { setScreen } = useZodiac();
-    const { jobs, prices, isLoading } = useDataStore();
+    const { jobs, prices, isLoading, initData } = useDataStore();
     const { openModal, closeModal } = useModalStore();
     const [searchQuery, setSearchQuery] = useState("");
-
-    // Reusable Skeleton Card for this screen
-    const JobCardSkeleton = () => (
-      <div className="glass-card p-4 flex items-center justify-between border border-white/5 opacity-60">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-4 w-12 rounded" />
-            <Skeleton className="h-4 w-32 rounded" />
-          </div>
-          <Skeleton className="h-3 w-24 rounded opacity-50" />
-        </div>
-        <div className="flex flex-col items-end gap-2">
-          <Skeleton className="h-4 w-16 rounded bg-orange-500/10" />
-          <Skeleton className="h-2 w-10 rounded opacity-30" />
-        </div>
-      </div>
-    );
 
     const filteredJobs = jobs.filter(
       (job) =>
@@ -44,16 +29,27 @@ export const JobCartScreen: ZodiacScreen = {
       openModal("GLOBAL", () => <JobCreationModal onClose={closeModal} />);
     };
 
+    // ✅ New handler to open job details
+    const handleOpenDetails = (jobId: string) => {
+      openModal("GLOBAL", () => (
+        <JobDetailsModal jobId={jobId} onClose={closeModal} />
+      ));
+    };
+
     return (
       <div className="flex flex-col h-full gap-6">
-        {/* 1. Header & Live Quick Action */}
+        {/* 1. Header with Refresh & Add */}
         <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-bold">Job Manager</h2>
-            <p className="text-[10px] text-cyan-400 uppercase tracking-widest font-black">
-              {isLoading ? "Syncing..." : `${jobs.length} Active Records`}
-            </p>
+          <div className="flex items-center gap-3">
+            <div>
+              <h2 className="text-2xl font-bold">Job Manager</h2>
+              <p className="text-[10px] text-cyan-400 uppercase tracking-widest font-black">
+                {isLoading ? "Syncing..." : `${jobs.length} Active Records`}
+              </p>
+            </div>
+            <RefreshButton onRefresh={initData} isLoading={isLoading} />
           </div>
+
           <button
             className="w-12 h-12 rounded-full bg-orange-500 text-black flex items-center justify-center text-2xl font-bold shadow-lg shadow-orange-500/40 active:scale-90 transition-transform"
             onClick={handleOpenCreation}
@@ -76,10 +72,9 @@ export const JobCartScreen: ZodiacScreen = {
           </span>
         </div>
 
-        {/* 3. Live Job List / Skeletons */}
+        {/* 3. List Logic */}
         <div className="flex-1 flex flex-col gap-3 overflow-y-auto pr-1 custom-scrollbar">
           {isLoading ? (
-            // Show 5 skeletons while fetching
             Array.from({ length: 5 }).map((_, i) => <JobCardSkeleton key={i} />)
           ) : filteredJobs.length > 0 ? (
             filteredJobs.map((job) => {
@@ -87,6 +82,8 @@ export const JobCartScreen: ZodiacScreen = {
               return (
                 <div
                   key={job.id}
+                  // ✅ Added click handler here
+                  onClick={() => handleOpenDetails(job.id)}
                   className="glass-card p-4 flex items-center justify-between border border-white/5 hover:border-cyan-400/30 transition-all cursor-pointer group active:scale-[0.98]"
                 >
                   <div className="flex flex-col gap-1">
@@ -121,7 +118,7 @@ export const JobCartScreen: ZodiacScreen = {
               );
             })
           ) : (
-            <div className="flex flex-col items-center justify-center py-20 opacity-20 animate-in fade-in">
+            <div className="flex flex-col items-center justify-center py-20 opacity-20">
               <span className="text-5xl mb-4">📂</span>
               <p className="text-xs uppercase tracking-widest font-bold">
                 No active jobs found
@@ -130,7 +127,7 @@ export const JobCartScreen: ZodiacScreen = {
           )}
         </div>
 
-        {/* 4. Footer Navigator */}
+        {/* 4. Footer */}
         <div className="mt-auto pb-4">
           <button
             onClick={() => setScreen("WELCOME")}
