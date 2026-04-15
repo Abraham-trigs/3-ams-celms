@@ -1,8 +1,8 @@
-// import { JobSelectionScreen } from "../screens/JobCartScreen";
 import { WelcomeScreen } from "../screens/WelcomeScreen";
 import { UserProfileScreen } from "../screens/UserProfileScreen";
 import { SubscriptionScreen } from "../screens/subscription/SubscriptionScreen";
-import { JobCartScreen } from "../screens/JobCartScreen"; // 1. Import the new screen
+import { JobCartScreen } from "../screens/JobCartScreen";
+import { AnalyticsDashboard } from "../screens/AnalyticsDashboard";
 import { ZodiacScreen } from "../types/screen.types";
 
 /**
@@ -10,10 +10,10 @@ import { ZodiacScreen } from "../types/screen.types";
  */
 export const SCREEN_MAP = {
   WELCOME: WelcomeScreen,
-  // JOB_SELECTION: JobSelectionScreen,
   USER_PROFILE: UserProfileScreen,
   SUBSCRIPTION: SubscriptionScreen,
-  JOB_CART: JobCartScreen, // 2. Register the ID
+  JOB_CART: JobCartScreen,
+  ANALYTICS: AnalyticsDashboard, // 2. Register the Analytics ID
 } as const satisfies Record<string, ZodiacScreen>;
 
 /**
@@ -29,7 +29,7 @@ export function getScreen(id: ScreenID): ZodiacScreen {
 }
 
 /**
- * Optional: preload hook (used in Step 11 for performance)
+ * Optional: preload hook
  */
 export function preloadScreen(id: ScreenID) {
   const screen = SCREEN_MAP[id];
