@@ -69,6 +69,11 @@ export interface JobTicket {
   totalEstimate: number;
   assignedStaffId?: string;
   status: JobStatus;
+
+  // Payment Tracking (Feature 4.1)
+  isPaid: boolean;
+  paymentRef?: string; // MoMo ID or Screenshot Ref
+
   startTime?: number; // Feature 2.1
   endTime?: number;
   createdAt: string;

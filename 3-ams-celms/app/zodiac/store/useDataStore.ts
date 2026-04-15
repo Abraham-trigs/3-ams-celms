@@ -5,16 +5,18 @@ import {
   JobTicket,
   JobFileVersion,
   JobFilesContainer,
+  DeliveryRecord,
 } from "../types/zodiac.types";
 
 interface DataState {
   prices: PriceItem[];
   inventory: StockItem[];
   jobs: JobTicket[];
+  deliveries: DeliveryRecord[];
   jobFiles: Record<string, JobFilesContainer>;
   isLoading: boolean;
 
-  // HYDRATION (Async for Prisma/API migration advantage)
+  // HYDRATION
   initData: () => Promise<void>;
 
   // PRICE MANAGEMENT
@@ -27,6 +29,13 @@ interface DataState {
   createJob: (job: JobTicket, materialUsed: number) => void;
   updateJobStatus: (jobId: string, status: JobTicket["status"]) => void;
 
+  // PAYMENT MANAGEMENT (Feature 4.1)
+  confirmPayment: (jobId: string, reference: string) => void;
+
+  // DELIVERY MANAGEMENT (Feature 6)
+  addDelivery: (delivery: DeliveryRecord) => void;
+  updateDelivery: (id: string, updates: Partial<DeliveryRecord>) => void;
+
   // WASTAGE & FILES
   recordWastage: (jobId: string, amount: number) => void;
   addFileVersion: (jobId: string, version: JobFileVersion) => void;
@@ -36,13 +45,13 @@ export const useDataStore = create<DataState>((set, get) => ({
   prices: [],
   inventory: [],
   jobs: [],
+  deliveries: [],
   jobFiles: {},
   isLoading: false,
 
   initData: async () => {
     set({ isLoading: true });
     try {
-      // Dynamic fetch mimics real API behavior
       const response = await fetch("/price-list.json");
       if (!response.ok) throw new Error("Failed to sync with data source");
 
@@ -52,6 +61,7 @@ export const useDataStore = create<DataState>((set, get) => ({
         prices: data.services,
         inventory: data.inventory,
         jobs: data.jobs || [],
+        deliveries: data.deliveries || [],
         isLoading: false,
       });
     } catch (error) {
@@ -86,7 +96,6 @@ export const useDataStore = create<DataState>((set, get) => ({
 
     set((state) => ({
       jobs: [job, ...state.jobs],
-      // Feature 8.2: Automatic deduction logic
       inventory: state.inventory.map((item) =>
         item.id === materialId
           ? { ...item, totalRemaining: item.totalRemaining - materialUsed }
@@ -98,6 +107,26 @@ export const useDataStore = create<DataState>((set, get) => ({
   updateJobStatus: (jobId, status) =>
     set((state) => ({
       jobs: state.jobs.map((j) => (j.id === jobId ? { ...j, status } : j)),
+    })),
+
+  // ✅ ADDED: Smart Payment Logic for Feature 4.1
+  confirmPayment: (jobId, reference) =>
+    set((state) => ({
+      jobs: state.jobs.map((j) =>
+        j.id === jobId ? { ...j, isPaid: true, paymentRef: reference } : j,
+      ),
+    })),
+
+  addDelivery: (delivery) =>
+    set((state) => ({
+      deliveries: [delivery, ...state.deliveries],
+    })),
+
+  updateDelivery: (id, updates) =>
+    set((state) => ({
+      deliveries: state.deliveries.map((d) =>
+        d.id === id ? { ...d, ...updates } : d,
+      ),
     })),
 
   recordWastage: (jobId, amount) => {

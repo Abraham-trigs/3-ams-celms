@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useDataStore } from "../../store/useDataStore";
-import { JobTicket } from "../types/zodiac.types";
 import { useModalStore } from "../../store/useModalStore";
 import { WastePromptModal } from "./WastePromptModal";
+import { DeliveryHandlingModal } from "./DeliveryHandlingModal";
+import { PaymentVerificationModal } from "./PaymentVerificationModal"; // ✅ Import new modal
+import { DeliveryRecord } from "../../types/zodiac.types";
 
 export function JobDetailsModal({
   jobId,
@@ -13,15 +15,23 @@ export function JobDetailsModal({
   jobId: string;
   onClose: () => void;
 }) {
-  const { jobs, prices, updateJobStatus, startJob, recordWastage } =
-    useDataStore();
+  const {
+    jobs,
+    prices,
+    deliveries,
+    updateJobStatus,
+    startJob,
+    recordWastage,
+    addDelivery,
+  } = useDataStore();
   const { swapModal } = useModalStore();
 
   const job = jobs.find((j) => j.id === jobId);
   const service = prices.find((p) => p.id === job?.serviceId);
+  const existingDelivery = deliveries.find((d) => d.jobId === jobId);
+
   const [elapsed, setElapsed] = useState(0);
 
-  // FEATURE 2.1: Live Production Timer
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (job?.status === "IN_PROGRESS" && job.startTime) {
@@ -41,7 +51,6 @@ export function JobDetailsModal({
     return `${hrs > 0 ? hrs + "h " : ""}${mins}m ${secs.toString().padStart(2, "0")}s`;
   };
 
-  // FEATURE 4.4: Strategic Waste Trigger
   const triggerWasteAudit = () => {
     swapModal("GLOBAL", () => (
       <WastePromptModal
@@ -55,18 +64,40 @@ export function JobDetailsModal({
     ));
   };
 
+  const handleFulfillment = () => {
+    if (existingDelivery) {
+      swapModal("GLOBAL", () => (
+        <DeliveryHandlingModal delivery={existingDelivery} />
+      ));
+    } else {
+      const newDelivery: DeliveryRecord = {
+        id: `DLV-${job.id}`,
+        jobId: job.id,
+        type: "PHYSICAL_PICKUP",
+        status: "PENDING_DATE",
+        handledBy: "PRINTER",
+      };
+      addDelivery(newDelivery);
+      swapModal("GLOBAL", () => (
+        <DeliveryHandlingModal delivery={newDelivery} />
+      ));
+    }
+  };
+
   return (
     <div className="glass-card p-6 w-full max-w-md border border-white/10 flex flex-col gap-6 animate-in slide-in-from-bottom-4 shadow-2xl">
-      {/* 1. Dynamic Header */}
       <header className="flex justify-between items-start">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <span className="text-[10px] bg-cyan-400/10 text-cyan-400 px-2 py-0.5 rounded font-black tracking-tighter">
               #{job.id}
             </span>
+            {/* ✅ Payment Badge (Feature 4.1) */}
             <span
-              className={`h-2 w-2 rounded-full animate-pulse ${job.status === "IN_PROGRESS" ? "bg-green-500" : "bg-white/20"}`}
-            />
+              className={`text-[8px] px-2 py-0.5 rounded-full font-black ${job.isPaid ? "bg-green-500 text-black" : "bg-red-500/20 text-red-500"}`}
+            >
+              {job.isPaid ? "PAID" : "UNPAID"}
+            </span>
           </div>
           <h2 className="text-xl font-bold text-white leading-tight">
             {job.clientName}
@@ -83,7 +114,7 @@ export function JobDetailsModal({
         </button>
       </header>
 
-      {/* 2. Production Clock (Feature 2.1) */}
+      {/* Production Clock */}
       <div className="relative overflow-hidden group py-10 bg-gradient-to-b from-white/5 to-transparent rounded-3xl border border-white/5 flex flex-col items-center">
         <span className="text-[10px] uppercase opacity-30 tracking-[0.3em] mb-2 font-black">
           {job.status === "IN_PROGRESS"
@@ -97,7 +128,6 @@ export function JobDetailsModal({
         </span>
       </div>
 
-      {/* 3. Specs Grid (Feature 1.1 / 8.1) */}
       <div className="grid grid-cols-3 gap-2">
         {[
           { label: "Qty", val: job.quantity, unit: service?.unit },
@@ -134,8 +164,21 @@ export function JobDetailsModal({
         ))}
       </div>
 
-      {/* 4. Feature-Specific Control Logic */}
       <div className="flex flex-col gap-3">
+        {/* ✅ Payment Verification Action (Feature 4.1) */}
+        {!job.isPaid && (
+          <button
+            onClick={() =>
+              swapModal("GLOBAL", () => (
+                <PaymentVerificationModal jobId={job.id} />
+              ))
+            }
+            className="w-full py-3 border border-green-500/30 text-green-500 text-[10px] font-bold rounded-xl hover:bg-green-500/5 transition-all"
+          >
+            Verify Payment Reference
+          </button>
+        )}
+
         {job.status === "PENDING" && (
           <button
             onClick={() => startJob(job.id)}
@@ -165,15 +208,21 @@ export function JobDetailsModal({
         {job.status === "SUCCESSFUL" && (
           <div className="flex flex-col gap-2">
             <div className="text-center py-4 bg-green-500/10 border border-green-500/20 rounded-2xl flex items-center justify-center gap-2">
-              <span className="text-green-500 text-xs">✔</span>
               <span className="text-green-500 font-black uppercase text-[10px] tracking-widest">
-                Production Complete
+                ✔ Production Complete
               </span>
             </div>
-            {/* Added: Feature 4.4 Post-Job Audit Ability */}
+            <button
+              onClick={handleFulfillment}
+              className="w-full py-4 bg-white text-black font-black rounded-2xl uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all"
+            >
+              {existingDelivery
+                ? "Manage Delivery / Pickup"
+                : "Arrange Fulfillment"}
+            </button>
             <button
               onClick={triggerWasteAudit}
-              className="w-full py-3 border border-orange-500/20 text-orange-400/60 text-[9px] uppercase font-bold rounded-xl hover:bg-orange-500/5 transition-all"
+              className="w-full py-3 border border-orange-500/20 text-orange-400/60 text-[9px] uppercase font-bold rounded-xl"
             >
               Update Waste Record
             </button>
@@ -181,10 +230,11 @@ export function JobDetailsModal({
         )}
       </div>
 
-      {/* Feature 6.1: Pickup Date Prompt */}
       {job.status === "SUCCESSFUL" && (
         <p className="text-[9px] opacity-30 text-center italic">
-          💡 Next step: Set pickup date in Delivery Handling (Feature 6.1)
+          {existingDelivery
+            ? `📅 Pickup scheduled: ${existingDelivery.pickupDate || "Pending Date"}`
+            : "💡 Next step: Arrange fulfillment to notify client."}
         </p>
       )}
     </div>
