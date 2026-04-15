@@ -1,3 +1,5 @@
+"use client";
+
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { generateJobRef } from "../utils/generateRef";
@@ -18,12 +20,29 @@ interface DataState {
   jobFiles: Record<string, JobFilesContainer>;
   isLoading: boolean;
 
+  // ✅ DRAFT STATE (The Bridge)
+  draft: {
+    id: string;
+    clientName: string;
+    serviceId: string;
+    quantity: number;
+    width: number;
+    height: number;
+    deliveryType: "PHYSICAL_PICKUP" | "PRINTER_DELIVERY";
+  };
+
   // UTILITIES
   getUniqueJobRef: () => string;
-  clearStore: () => void; // ✅ Added to interface
+  clearStore: () => void;
+  clearCompletedJobs: () => void;
 
   // HYDRATION
   initData: () => Promise<void>;
+
+  // ✅ DRAFT ACTIONS
+  setDraft: (updates: Partial<DataState["draft"]>) => void;
+  resetDraft: () => void;
+  calculateLiveEstimate: () => number;
 
   // PRICE MANAGEMENT
   updatePrice: (serviceId: string, newPrice: number) => void;
@@ -60,6 +79,17 @@ export const useDataStore = create<DataState>()(
       jobFiles: {},
       isLoading: false,
 
+      // ✅ Initial Draft State
+      draft: {
+        id: "", // Will be set in init or reset
+        clientName: "",
+        serviceId: "",
+        quantity: 1,
+        width: 0,
+        height: 0,
+        deliveryType: "PHYSICAL_PICKUP",
+      },
+
       getUniqueJobRef: () => {
         const { jobs } = get();
         let newRef = generateJobRef();
@@ -69,14 +99,43 @@ export const useDataStore = create<DataState>()(
         return newRef;
       },
 
-      // ✅ Implementation: Removes all successful jobs to free up quota
+      // ✅ Draft Logic Implementation
+      setDraft: (updates) =>
+        set((state) => ({
+          draft: { ...state.draft, ...updates },
+        })),
+
+      resetDraft: () =>
+        set((state) => ({
+          draft: {
+            id: get().getUniqueJobRef(),
+            clientName: "",
+            serviceId: "",
+            quantity: 1,
+            width: 0,
+            height: 0,
+            deliveryType: "PHYSICAL_PICKUP",
+          },
+        })),
+
+      calculateLiveEstimate: () => {
+        const { draft, prices } = get();
+        const service = prices.find((p) => p.id === draft.serviceId);
+        if (!service) return 0;
+
+        const isLargeFormat =
+          service.category === "Large Format" || service.unit === "sqft";
+        const units = isLargeFormat ? draft.width * draft.height : 1;
+
+        return (units || 1) * draft.quantity * service.priceGHS;
+      },
+
       clearCompletedJobs: () => {
         set((state) => ({
           jobs: state.jobs.filter((job) => job.status !== "SUCCESSFUL"),
         }));
       },
 
-      // ✅ Implementation: Resets state to initial and clears localStorage
       clearStore: () => {
         set({
           prices: [],
@@ -89,6 +148,11 @@ export const useDataStore = create<DataState>()(
       },
 
       initData: async () => {
+        // Also ensure a fresh REF ID if draft is empty
+        if (!get().draft.id) {
+          get().resetDraft();
+        }
+
         if (get().prices.length > 0) return;
 
         set({ isLoading: true });

@@ -1,19 +1,20 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+// ✅ Aligned with your PlanSelectionForm IDs
 type Role = "ADMIN" | "OPERATOR" | "CASHIER" | "GUEST";
-type Plan = "BASIC" | "PRO";
+type Plan = "FREE" | "GROW" | "DOMINATE";
 
 interface AccessState {
   userRole: Role;
-  subscription: Plan; // ✅ Track current plan
+  subscription: Plan;
 
   // Actions
   setRole: (role: Role) => void;
-  setSubscription: (plan: Plan) => void; // ✅ Setter for plans
+  setSubscription: (plan: Plan) => void;
 
   // Logic Helpers
-  getJobLimit: () => number; // ✅ Returns 50 for BASIC, Infinity for PRO
+  getJobLimit: () => number;
   can: (
     permission:
       | "EDIT_PRICES"
@@ -27,20 +28,26 @@ export const useAccessStore = create<AccessState>()(
   persist(
     (set, get) => ({
       userRole: "ADMIN",
-      subscription: "BASIC", // Default on install
+      subscription: "FREE", // Default state before onboarding
 
       setRole: (role) => set({ userRole: role }),
 
       setSubscription: (plan) => set({ subscription: plan }),
 
+      // ✅ Robust mapping for the new Plan tiers
       getJobLimit: () => {
-        return get().subscription === "PRO" ? Infinity : 50;
+        const { subscription } = get();
+        const limits: Record<Plan, number> = {
+          FREE: 10, // Free starters
+          GROW: 100, // Growing teams
+          DOMINATE: Infinity, // High-volume printing
+        };
+        return limits[subscription];
       },
 
       can: (permission) => {
         const { userRole, subscription } = get();
 
-        // Permission Matrix
         const permissions: Record<Role, string[]> = {
           ADMIN: [
             "EDIT_PRICES",
@@ -53,8 +60,8 @@ export const useAccessStore = create<AccessState>()(
           GUEST: [],
         };
 
-        // Plan Constraint: Even an ADMIN cannot see advanced analytics on BASIC
-        if (permission === "ADVANCED_ANALYTICS" && subscription === "BASIC") {
+        // ✅ Plan-based gating: Analytics only for paid tiers (GROW/DOMINATE)
+        if (permission === "ADVANCED_ANALYTICS" && subscription === "FREE") {
           return false;
         }
 

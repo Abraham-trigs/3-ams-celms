@@ -1,3 +1,5 @@
+"use client";
+
 import { SCREEN_MAP, ScreenID } from "../view/screen.registry";
 import { ViewMode } from "../store/zodiac.store";
 import { useModalStore } from "../store/useModalStore";
@@ -41,9 +43,18 @@ export function resolveLayout(
 
   const isLockedToDetail = isDetail || hasGlobalModal || hasDetailModal;
 
+  // ---------------- CUSTOM HEIGHT OVERRIDE ----------------
+  let calculatedHeight = "40%"; // Default
+
+  if (isLockedToDetail) {
+    calculatedHeight = "100%";
+  } else if (activeScreenId === "JOB_INTAKE") {
+    calculatedHeight = "60%"; // ✅ Custom height for the Intake Screen
+  }
+
   return {
     // ---------------- CORE LAYOUT ----------------
-    topHeightStyle: isLockedToDetail ? "100%" : "40%",
+    topHeightStyle: calculatedHeight,
     showDownZone: !isLockedToDetail,
 
     TopZoneComponent: screenConfig?.TopComponent,
