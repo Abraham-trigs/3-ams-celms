@@ -3,8 +3,10 @@ import { UserProfileScreen } from "../screens/UserProfileScreen";
 import { SubscriptionScreen } from "../screens/subscription/SubscriptionScreen";
 import { JobCartScreen } from "../screens/JobCartScreen";
 import { AnalyticsDashboard } from "../screens/AnalyticsDashboard";
+import { HubMenuScreen } from "../screens/HubMenuScreen"; // ✅ New
+import { StaffManagementScreen } from "../screens/StaffManagementScreen"; // ✅ New
 import { ZodiacScreen } from "../types/screen.types";
-
+import { StaffProfileScreen } from "../screens/StaffProfileScreen";
 /**
  * Central screen registry (source of truth for navigation engine)
  */
@@ -13,7 +15,10 @@ export const SCREEN_MAP = {
   USER_PROFILE: UserProfileScreen,
   SUBSCRIPTION: SubscriptionScreen,
   JOB_CART: JobCartScreen,
-  ANALYTICS: AnalyticsDashboard, // 2. Register the Analytics ID
+  ANALYTICS: AnalyticsDashboard,
+  HUB_MENU: HubMenuScreen, // ✅ Registered for BottomBar access
+  STAFF_MGMT: StaffManagementScreen, // ✅ Registered for Hub access
+  STAFF_PROFILE: StaffProfileScreen, // ✅ Registered for dynamic staff navigation
 } as const satisfies Record<string, ZodiacScreen>;
 
 /**
@@ -32,6 +37,5 @@ export function getScreen(id: ScreenID): ZodiacScreen {
  * Optional: preload hook
  */
 export function preloadScreen(id: ScreenID) {
-  const screen = SCREEN_MAP[id];
-  return screen;
+  return SCREEN_MAP[id];
 }

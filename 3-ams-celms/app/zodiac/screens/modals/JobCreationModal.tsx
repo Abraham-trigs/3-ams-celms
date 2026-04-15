@@ -2,10 +2,16 @@
 
 import { useState, useMemo } from "react";
 import { useDataStore } from "../../store/useDataStore";
+import { useAccessStore } from "../../store/useAccessStore"; // ✅ Added
 import { JobTicket, DeliveryRecord } from "../../types/zodiac.types";
 
 export function JobCreationModal({ onClose }: { onClose: () => void }) {
-  const { prices, inventory, createJob, addDelivery } = useDataStore();
+  const { prices, inventory, createJob, addDelivery, getUniqueJobRef, jobs } =
+    useDataStore();
+  const { getJobLimit, subscription } = useAccessStore(); // ✅ Get limit logic
+
+  const [jobId] = useState(() => getUniqueJobRef());
+  const [copied, setCopied] = useState(false);
 
   const [clientName, setClientName] = useState("");
   const [serviceId, setServiceId] = useState("");
@@ -13,16 +19,26 @@ export function JobCreationModal({ onClose }: { onClose: () => void }) {
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
 
-  // Feature 6.2/6.4: Initial Delivery Selection
   const [deliveryType, setDeliveryType] = useState<
     "PHYSICAL_PICKUP" | "PRINTER_DELIVERY"
   >("PHYSICAL_PICKUP");
   const [handledBy, setHandledBy] = useState<"CLIENT" | "PRINTER">("CLIENT");
 
+  // ✅ Check if subscription limit is reached
+  const currentLimit = getJobLimit();
+  const isLimitReached = jobs.length >= currentLimit;
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(jobId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const selectedService = useMemo(
     () => prices.find((p) => p.id === serviceId),
     [serviceId, prices],
   );
+
   const linkedMaterial = useMemo(
     () => inventory.find((i) => i.id === selectedService?.stock_ref),
     [selectedService, inventory],
@@ -43,9 +59,7 @@ export function JobCreationModal({ onClose }: { onClose: () => void }) {
     : true;
 
   const handleConfirm = () => {
-    if (!clientName || !serviceId || !hasEnoughStock) return;
-
-    const jobId = Math.random().toString(36).substring(2, 6).toUpperCase();
+    if (!clientName || !serviceId || !hasEnoughStock || isLimitReached) return;
 
     const newJob: JobTicket = {
       id: jobId,
@@ -60,7 +74,6 @@ export function JobCreationModal({ onClose }: { onClose: () => void }) {
       materialWastage: 0,
     };
 
-    // Feature 6.0: Pre-create delivery record
     const initialDelivery: DeliveryRecord = {
       id: `DLV-${jobId}`,
       jobId: jobId,
@@ -70,18 +83,45 @@ export function JobCreationModal({ onClose }: { onClose: () => void }) {
     };
 
     createJob(newJob, calculation.materialNeeded);
-    addDelivery(initialDelivery); // Persist fulfillment choice
+    addDelivery(initialDelivery);
     onClose();
   };
 
   return (
     <div className="glass-card p-6 w-full max-w-md border border-cyan-500/30 flex flex-col gap-5 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto custom-scrollbar">
-      <header>
-        <h2 className="text-2xl font-bold text-white">Create New Job</h2>
-        <p className="text-[10px] text-cyan-400 uppercase tracking-widest font-black">
-          Production Intake
-        </p>
+      <header className="flex justify-between items-start">
+        <div>
+          <h2 className="text-2xl font-bold text-white">Create New Job</h2>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-[10px] text-cyan-400 uppercase tracking-widest font-black">
+              Production Intake
+            </p>
+            <button
+              onClick={copyToClipboard}
+              className="flex items-center gap-1.5 text-[10px] bg-white/10 hover:bg-white/20 text-white px-2 py-0.5 rounded font-mono border border-white/10 transition-colors group"
+            >
+              <span className="opacity-50">REF:</span>
+              <span className="font-bold">{jobId}</span>
+              <span
+                className={`ml-1 text-[8px] px-1 rounded ${copied ? "bg-green-500 text-black" : "bg-white/10 text-cyan-400 opacity-0 group-hover:opacity-100"}`}
+              >
+                {copied ? "SAVED!" : "COPY"}
+              </span>
+            </button>
+          </div>
+        </div>
       </header>
+
+      {/* ✅ Limit Warning Alert */}
+      {isLimitReached && (
+        <div className="bg-orange-500/10 border border-orange-500/40 p-3 rounded-xl animate-pulse">
+          <p className="text-[10px] text-orange-400 font-bold text-center leading-tight">
+            ⚠️ {subscription} LIMIT REACHED ({jobs.length}/{currentLimit}){" "}
+            <br />
+            Upgrade to PRO or clear old jobs to continue.
+          </p>
+        </div>
+      )}
 
       <div className="flex flex-col gap-3">
         <input
@@ -121,7 +161,9 @@ export function JobCreationModal({ onClose }: { onClose: () => void }) {
 
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1">
-          <label className="text-[9px] opacity-40 uppercase">Quantity</label>
+          <label className="text-[9px] opacity-40 uppercase font-bold">
+            Quantity
+          </label>
           <input
             type="number"
             value={quantity}
@@ -130,11 +172,12 @@ export function JobCreationModal({ onClose }: { onClose: () => void }) {
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-[9px] opacity-40 uppercase">
+          <label className="text-[9px] opacity-40 uppercase font-bold">
             Delivery Handling
           </label>
           <select
             className="input-field text-[10px]"
+            value={handledBy}
             onChange={(e) => setHandledBy(e.target.value as any)}
           >
             <option value="CLIENT">Client Handles</option>
@@ -162,16 +205,18 @@ export function JobCreationModal({ onClose }: { onClose: () => void }) {
       </div>
 
       <button
-        disabled={!hasEnoughStock || !serviceId}
+        disabled={
+          !hasEnoughStock || !serviceId || !clientName || isLimitReached
+        }
         onClick={handleConfirm}
-        className="btn-primary py-4 uppercase"
+        className={`btn-primary py-4 uppercase font-black tracking-widest ${isLimitReached ? "opacity-30 cursor-not-allowed bg-white/10 text-white/40" : ""}`}
       >
-        Push to Production
+        {isLimitReached ? "Limit Reached" : "Push to Production"}
       </button>
 
       <button
         onClick={onClose}
-        className="text-[10px] opacity-30 hover:opacity-100"
+        className="text-[10px] opacity-30 hover:opacity-100 uppercase font-bold tracking-tighter"
       >
         Cancel Entry
       </button>

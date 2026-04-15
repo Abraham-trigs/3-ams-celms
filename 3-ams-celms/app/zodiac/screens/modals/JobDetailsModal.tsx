@@ -5,7 +5,7 @@ import { useDataStore } from "../../store/useDataStore";
 import { useModalStore } from "../../store/useModalStore";
 import { WastePromptModal } from "./WastePromptModal";
 import { DeliveryHandlingModal } from "./DeliveryHandlingModal";
-import { PaymentVerificationModal } from "./PaymentVerificationModal"; // ✅ Import new modal
+import { PaymentVerificationModal } from "./PaymentVerificationModal";
 import { DeliveryRecord } from "../../types/zodiac.types";
 
 export function JobDetailsModal({
@@ -23,12 +23,19 @@ export function JobDetailsModal({
     startJob,
     recordWastage,
     addDelivery,
+    assignStaff, // Ensure this exists in your store to update job.assignedStaffId
   } = useDataStore();
   const { swapModal } = useModalStore();
 
   const job = jobs.find((j) => j.id === jobId);
   const service = prices.find((p) => p.id === job?.serviceId);
   const existingDelivery = deliveries.find((d) => d.jobId === jobId);
+
+  // Mock Staff List for assignment (Feature 3.2)
+  const staffList = [
+    { id: "STF-01", name: "Kojo" },
+    { id: "STF-02", name: "Ama" },
+  ];
 
   const [elapsed, setElapsed] = useState(0);
 
@@ -92,7 +99,6 @@ export function JobDetailsModal({
             <span className="text-[10px] bg-cyan-400/10 text-cyan-400 px-2 py-0.5 rounded font-black tracking-tighter">
               #{job.id}
             </span>
-            {/* ✅ Payment Badge (Feature 4.1) */}
             <span
               className={`text-[8px] px-2 py-0.5 rounded-full font-black ${job.isPaid ? "bg-green-500 text-black" : "bg-red-500/20 text-red-500"}`}
             >
@@ -126,6 +132,27 @@ export function JobDetailsModal({
         >
           {formatTime(elapsed)}
         </span>
+      </div>
+
+      {/* ✅ FEATURE 3.2: Staff Assignment Section */}
+      <div className="flex flex-col gap-2 p-4 bg-white/5 rounded-2xl border border-white/5">
+        <label className="text-[10px] uppercase opacity-40 font-black tracking-widest">
+          Assigned Personnel
+        </label>
+        <select
+          value={job.assignedStaffId || ""}
+          onChange={(e) => assignStaff(job.id, e.target.value)}
+          className="bg-transparent text-sm font-bold text-cyan-400 outline-none"
+        >
+          <option value="" disabled>
+            Select Staff Member
+          </option>
+          {staffList.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="grid grid-cols-3 gap-2">
@@ -165,7 +192,6 @@ export function JobDetailsModal({
       </div>
 
       <div className="flex flex-col gap-3">
-        {/* ✅ Payment Verification Action (Feature 4.1) */}
         {!job.isPaid && (
           <button
             onClick={() =>
@@ -229,14 +255,6 @@ export function JobDetailsModal({
           </div>
         )}
       </div>
-
-      {job.status === "SUCCESSFUL" && (
-        <p className="text-[9px] opacity-30 text-center italic">
-          {existingDelivery
-            ? `📅 Pickup scheduled: ${existingDelivery.pickupDate || "Pending Date"}`
-            : "💡 Next step: Arrange fulfillment to notify client."}
-        </p>
-      )}
     </div>
   );
 }
