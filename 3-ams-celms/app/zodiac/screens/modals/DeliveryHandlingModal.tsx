@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useDataStore } from "../../store/useDataStore";
-import { DeliveryRecord, DeliveryStatus } from "../types/zodiac.types"; // ✅ Using Master Types
+import { useDataActions, usePrices } from "../../hooks/store.hooks";
+import { DeliveryRecord, DeliveryStatus } from "../types/zodiac.types";
 import { useModalStore } from "../../store/useModalStore";
+
+// Mock staff list - replace with useStaff() if you have a staff store
+const PRINTER_STAFF = ["Kofi", "Ama", "Nana", "Yaw"];
 
 export function DeliveryHandlingModal({
   delivery,
@@ -11,104 +14,125 @@ export function DeliveryHandlingModal({
   delivery: DeliveryRecord;
 }) {
   const { closeModal } = useModalStore();
-  const { updateJobStatus } = useDataStore(); // We'll assume a delivery update function in the store
+  const { updateJobStatus, updateDelivery, confirmPayment, assignStaff } =
+    useDataActions();
 
   const [status, setStatus] = useState<DeliveryStatus>(delivery.status);
   const [pickupDate, setPickupDate] = useState(delivery.pickupDate || "");
-
-  const togglePause = () => {
-    // Feature 6.3: Pause/Resume Logic
-    const nextStatus = status === "PAUSED" ? "SCHEDULED" : "PAUSED";
-    setStatus(nextStatus);
-  };
+  const [isPaid, setIsPaid] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState("");
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const handleFinalConfirm = () => {
-    // 1. Logic: Update the global record
-    console.log(`Saving Delivery ${delivery.id}: ${status} on ${pickupDate}`);
+    setIsSyncing(true);
 
-    // 2. Logic: If completed, move Job Status to DELIVERED
+    // 1. Sync Records
+    updateDelivery(delivery.id, { status, pickupDate });
+
+    if (isPaid) confirmPayment(delivery.jobId, `PAY-${Date.now()}`);
+    if (selectedStaff) assignStaff(delivery.jobId, selectedStaff);
+
+    // 2. Logic: If completed, move Job Status
     if (status === "COMPLETED") {
       updateJobStatus(delivery.jobId, "DELIVERED");
     }
 
-    closeModal("GLOBAL");
+    setTimeout(() => {
+      closeModal("GLOBAL");
+    }, 800);
   };
 
   return (
-    <div className="glass-card p-6 w-full max-w-sm border-white/10 relative overflow-hidden animate-in zoom-in-95">
-      {/* PAUSE OVERLAY (Feature 6.3) */}
-      {status === "PAUSED" && (
-        <div className="absolute inset-0 bg-orange-500/20 backdrop-blur-[2px] z-20 flex items-center justify-center pointer-events-none transition-all">
-          <div className="bg-orange-500 text-white text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-[0.2em] shadow-2xl">
-            Delivery Paused
-          </div>
+    <div className="glass-card p-6 w-full max-w-sm border-white/10 relative overflow-hidden bg-[#0A0A0A] backdrop-blur-2xl rounded-[2.5rem] shadow-2xl">
+      {isSyncing && (
+        <div className="absolute inset-0 bg-cyan-500 z-50 flex flex-col items-center justify-center animate-in fade-in">
+          <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin mb-4" />
+          <span className="text-black font-black uppercase text-[10px] tracking-[0.3em]">
+            Syncing Records
+          </span>
         </div>
       )}
 
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-xl font-bold">Fulfillment</h2>
-          <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">
-            Feature 6.0 Implementation
-          </p>
-        </div>
-        <span className="text-[10px] opacity-40 font-mono">
-          ID: {delivery.id}
-        </span>
-      </div>
+      <h2 className="text-xl font-bold tracking-tighter italic text-white mb-6">
+        Fulfillment Ops
+      </h2>
 
-      <div className="flex flex-col gap-5">
-        {/* PICKUP DATE SETTER (Feature 6.1) */}
+      <div className="flex flex-col gap-4">
+        {/* STAFF ASSIGNMENT */}
         <div className="flex flex-col gap-1">
-          <label className="text-[10px] uppercase opacity-40 font-black tracking-widest">
-            Confirmed Pickup Date
+          <label className="text-[9px] uppercase opacity-40 font-black tracking-widest ml-1">
+            Handled By
+          </label>
+          <select
+            value={selectedStaff}
+            onChange={(e) => setSelectedStaff(e.target.value)}
+            className="bg-white/5 border border-white/10 p-4 rounded-2xl outline-none focus:border-cyan-400 text-sm font-bold text-white appearance-none"
+          >
+            <option value="" disabled className="bg-black">
+              Select Staff...
+            </option>
+            {PRINTER_STAFF.map((name) => (
+              <option key={name} value={name} className="bg-black">
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* PAYMENT TOGGLE */}
+        <button
+          onClick={() => setIsPaid(!isPaid)}
+          className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
+            isPaid
+              ? "bg-green-500/20 border-green-500/50"
+              : "bg-white/5 border-white/10 opacity-60"
+          }`}
+        >
+          <span className="text-[9px] font-black uppercase tracking-widest text-white">
+            Payment Received
+          </span>
+          <div
+            className={`w-8 h-4 rounded-full relative ${isPaid ? "bg-green-500" : "bg-white/20"}`}
+          >
+            <div
+              className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${isPaid ? "left-4.5" : "left-0.5"}`}
+            />
+          </div>
+        </button>
+
+        {/* DATE PICKER */}
+        <div className="flex flex-col gap-1">
+          <label className="text-[9px] uppercase opacity-40 font-black tracking-widest ml-1">
+            Date
           </label>
           <input
             type="date"
             value={pickupDate}
             onChange={(e) => setPickupDate(e.target.value)}
-            className="bg-blue-900/30 border border-white/10 p-4 rounded-2xl outline-none focus:border-cyan-400 transition-all text-sm font-mono text-white"
+            className="bg-white/5 border border-white/10 p-4 rounded-2xl outline-none focus:border-cyan-400 text-sm text-white font-mono"
           />
         </div>
 
-        {/* DELIVERY OPTIONS (Feature 6.2 & 6.4) */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-            <p className="text-[8px] opacity-40 uppercase font-bold mb-1 tracking-tighter">
-              Handling By
-            </p>
-            <span className="text-xs font-black text-cyan-400">
-              {delivery.handledBy === "PRINTER" ? "PRINTER" : "CLIENT"}
-            </span>
-          </div>
-          <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-            <p className="text-[8px] opacity-40 uppercase font-bold mb-1 tracking-tighter">
-              Method
-            </p>
-            <span className="text-xs font-black">
-              {delivery.type.replace("_", " ")}
-            </span>
-          </div>
-        </div>
-
-        {/* ACTION BUTTONS */}
-        <div className="flex flex-col gap-2 mt-2">
+        {/* ACTIONS */}
+        <div className="grid grid-cols-1 gap-2 mt-2">
           <button
-            onClick={togglePause}
-            className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all border ${
+            onClick={() =>
+              setStatus(status === "PAUSED" ? "SCHEDULED" : "PAUSED")
+            }
+            className={`w-full py-4 rounded-2xl font-black text-[9px] uppercase tracking-[0.2em] border ${
               status === "PAUSED"
-                ? "bg-cyan-500 text-black border-cyan-400"
-                : "bg-white/5 text-orange-500 border-orange-500/20 hover:bg-orange-500/10"
+                ? "bg-orange-500 text-white border-orange-400"
+                : "bg-white/5 text-orange-400 border-orange-500/20"
             }`}
           >
-            {status === "PAUSED" ? "▶ Resume Delivery" : "⏸ Pause Delivery"}
+            {status === "PAUSED" ? "Resume" : "Pause"}
           </button>
 
           <button
             onClick={handleFinalConfirm}
-            className="w-full py-4 bg-white text-black font-black rounded-2xl text-[10px] uppercase tracking-[0.2em] active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all"
+            className="w-full py-5 bg-white text-black font-black rounded-2xl text-[10px] uppercase tracking-[0.3em] active:scale-95 shadow-xl"
           >
-            Confirm & Sync Record
+            Confirm & Finish
           </button>
         </div>
       </div>

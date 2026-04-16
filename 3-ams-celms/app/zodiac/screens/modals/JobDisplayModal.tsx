@@ -1,15 +1,19 @@
 "use client";
 
-import { useDataStore } from "../../store/useDataStore";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { useDataStore } from "../../store/core/useDataStore";
 
 export function JobDisplayModal() {
   const { draft, prices, calculateLiveEstimate } = useDataStore();
 
+  // ✅ null = CENTER (idle)
+  const [sliderIndex, setSliderIndex] = useState<number | null>(null);
+
   const selectedService = prices.find((p) => p.id === draft.serviceId);
   const total = calculateLiveEstimate();
 
-  // Mapping the constant details for the receipt view
-  const receiptLines = [
+  const allLines = [
     { label: "Job type:", value: selectedService?.category || "---" },
     { label: "Material:", value: selectedService?.service || "---" },
     { label: "Client:", value: draft.clientName || "- UNNAMED -" },
@@ -21,9 +25,43 @@ export function JobDisplayModal() {
     { label: "Destination:", value: draft.deliveryType || "- PENDING -" },
   ];
 
+  const ITEMS_PER_PAGE = 4;
+
+  // ✅ page logic
+  const page = sliderIndex !== null && sliderIndex >= 2 ? 1 : 0;
+
+  const visibleLines = allLines.slice(
+    page * ITEMS_PER_PAGE,
+    (page + 1) * ITEMS_PER_PAGE,
+  );
+
+  const canGoNext = sliderIndex === null || sliderIndex < 3;
+  const canGoPrev = sliderIndex === null || sliderIndex > 0;
+
+  // ✅ RIGHT CLICK → jump to last if idle
+  const next = () => {
+    if (sliderIndex === null) return setSliderIndex(3);
+    if (sliderIndex < 3) return setSliderIndex((s) => (s as number) + 1);
+  };
+
+  // ✅ LEFT CLICK → jump to first if idle
+  const prev = () => {
+    if (sliderIndex === null) return setSliderIndex(0);
+    if (sliderIndex > 0) return setSliderIndex((s) => (s as number) - 1);
+
+    // if already at first → go back to center
+    setSliderIndex(null);
+  };
+
+  // ✅ Position mapping
+  const getX = () => {
+    if (sliderIndex === null) return 1.5 * 16; // center
+    return sliderIndex * 16;
+  };
+
   return (
     <div className="flex flex-col items-center w-full px-6 py-4 animate-in fade-in duration-700">
-      {/* 1. REF Header */}
+      {/* Header */}
       <div className="w-full flex justify-between items-center mb-6">
         <span className="text-[10px] text-cyan-400 font-black tracking-widest bg-cyan-400/10 px-2 py-1 rounded">
           REF: {draft.id || "---"}
@@ -33,15 +71,15 @@ export function JobDisplayModal() {
         </span>
       </div>
 
-      {/* 2. The Glass Receipt (The Image 1 "Card") */}
-      <div className="glass-card w-full max-w-[320px] p-8 rounded-[3rem] border-none bg-white/15 backdrop-blur-3xl shadow-2xl relative overflow-hidden">
-        <div className="flex flex-col gap-2 text-[12px] font-medium text-blue-900/70 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
-          {receiptLines.map((line, i) => (
+      {/* Card */}
+      <div className="glass-card w-full max-w-[320px] p-8 rounded-[3rem] bg-white/15 backdrop-blur-3xl shadow-2xl relative overflow-hidden min-h-[300px] flex flex-col">
+        <div className="flex flex-col gap-3 text-[12px] font-medium text-blue-900/70 flex-1">
+          {visibleLines.map((line, i) => (
             <div
               key={i}
               className="flex justify-between items-end gap-4 border-b border-black/5 pb-1"
             >
-              <span className="whitespace-nowrap">{line.label}</span>
+              <span>{line.label}</span>
               <span className="font-black text-black text-right truncate">
                 {line.value}
               </span>
@@ -49,20 +87,57 @@ export function JobDisplayModal() {
           ))}
         </div>
 
-        {/* Decorative Receipt Bottom */}
-        <div className="flex justify-center gap-1.5 mt-8">
-          {[...Array(8)].map((_, i) => (
-            <div
-              key={i}
-              className={`w-1.5 h-1.5 rounded-full ${i === 3 ? "bg-orange-400" : "bg-white/30"}`}
+        {/* Navigation */}
+        <div className="flex items-center justify-between mt-8">
+          {/* LEFT */}
+          <button
+            onClick={prev}
+            disabled={!canGoPrev}
+            className="w-10 h-10 rounded-full flex items-center justify-center bg-black/5 disabled:opacity-10"
+          >
+            ←
+          </button>
+
+          {/* DOTS */}
+          <div className="relative flex items-center justify-between w-[64px]">
+            {[0, 1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${
+                  sliderIndex === i ? "bg-orange-400 scale-125" : "bg-white/20"
+                }`}
+              />
+            ))}
+
+            {/* GLIDER */}
+            <motion.div
+              className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.8)]"
+              animate={{
+                x: getX(),
+                scale: 1.4,
+              }}
+              transition={{
+                type: "spring",
+                stiffness: 320,
+                damping: 22,
+              }}
             />
-          ))}
+          </div>
+
+          {/* RIGHT */}
+          <button
+            onClick={next}
+            disabled={!canGoNext}
+            className="w-10 h-10 rounded-full flex items-center justify-center bg-black/5 disabled:opacity-10"
+          >
+            →
+          </button>
         </div>
       </div>
 
-      {/* 3. The Live Price Result */}
-      <div className="mt-8 flex flex-col items-center">
-        <span className="text-white font-black text-4xl tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+      {/* Total */}
+      <div className="mt-8">
+        <span className="text-white font-black text-4xl">
           Gh₵ {total.toFixed(2)}
         </span>
       </div>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useZodiac } from "../store/zodiac.store";
-import { useDataStore } from "../store/useDataStore";
+import { useDataStore } from "../store/core/useDataStore";
 import { useModalStore } from "../store/useModalStore";
 import { ZodiacScreen } from "../types/screen.types";
 import { JobCreationModal } from "./modals/JobCreationModal";

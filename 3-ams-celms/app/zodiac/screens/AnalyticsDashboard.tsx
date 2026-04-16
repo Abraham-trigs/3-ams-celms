@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useDataStore } from "../store/useDataStore";
+import { useDataStore } from "../store/core/useDataStore";
 import { useZodiac } from "../store/zodiac.store";
 import { ZodiacScreen } from "../types/screen.types";
 

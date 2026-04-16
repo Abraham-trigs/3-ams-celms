@@ -2,23 +2,24 @@
 
 import "./globals.css";
 import { useEffect, useState } from "react";
-import { useDataStore } from "./store/useDataStore"; // ✅ Import your store
-
+import { useDataActions } from "./hooks/store.hooks";
 export default function ZodiacLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const [mounted, setMounted] = useState(false);
-  const initData = useDataStore((s) => s.initData); // ✅ Get init function
+  const { initData } = useDataActions(); // ✅ Destructure clean action
 
   useEffect(() => {
     setMounted(true);
-    initData(); // 🚀 Trigger the fetch as soon as the layout mounts
+    initData();
   }, [initData]);
 
-  if (!mounted)
+  // Prevent Hydration Mismatch
+  if (!mounted) {
     return <div className="mobile-wrapper" style={{ visibility: "hidden" }} />;
+  }
 
   return <div className="mobile-wrapper">{children}</div>;
 }

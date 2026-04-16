@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useDataStore } from "../../store/useDataStore";
+import { useDataStore } from "../../store/core/useDataStore";
 import { useModalStore } from "../../store/useModalStore";
 
 export function ServiceSearchModal() {

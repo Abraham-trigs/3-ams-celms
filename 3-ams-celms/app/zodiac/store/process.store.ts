@@ -143,3 +143,102 @@ export const useProcessStore = create<ProcessStore>()(
     },
   ),
 );
+
+// "use client";
+
+// import { create } from "zustand";
+// import { persist, createJSONStorage } from "zustand/middleware";
+
+// import type {
+//   LoadingMap,
+//   ErrorMap,
+//   LoadingKey,
+//   ErrorKey,
+// } from "@/types/zodiac.types";
+
+// interface ProcessState {
+//   loading: LoadingMap;
+//   errors: ErrorMap;
+
+//   // ─────────────────────────────
+//   // CORE CONTROL
+//   // ─────────────────────────────
+//   start: (key: LoadingKey) => void;
+//   stop: (key: LoadingKey) => void;
+//   fail: (key: ErrorKey, message: string) => void;
+//   clearError: (key: ErrorKey) => void;
+
+//   reset: () => void;
+
+//   // ─────────────────────────────
+//   // SAFE HELPERS
+//   // ─────────────────────────────
+//   isLoading: (key: LoadingKey) => boolean;
+//   getError: (key: ErrorKey) => string | null | undefined;
+// }
+
+// const initialState = {
+//   loading: {},
+//   errors: {},
+// };
+
+// export const useProcessStore = create<ProcessState>()(
+//   persist(
+//     (set, get) => ({
+//       ...initialState,
+
+//       // START LOADING
+//       start: (key) =>
+//         set((state) => ({
+//           loading: {
+//             ...state.loading,
+//             [key]: true,
+//           },
+//           errors: {
+//             ...state.errors,
+//             [key]: null,
+//           },
+//         })),
+
+//       // STOP LOADING
+//       stop: (key) =>
+//         set((state) => ({
+//           loading: {
+//             ...state.loading,
+//             [key]: false,
+//           },
+//         })),
+
+//       // FAIL STATE
+//       fail: (key, message) =>
+//         set((state) => ({
+//           loading: {
+//             ...state.loading,
+//             [key]: false,
+//           },
+//           errors: {
+//             ...state.errors,
+//             [key]: message,
+//           },
+//         })),
+
+//       clearError: (key) =>
+//         set((state) => ({
+//           errors: {
+//             ...state.errors,
+//             [key]: null,
+//           },
+//         })),
+
+//       reset: () => set(initialState),
+
+//       // HELPERS
+//       isLoading: (key) => !!get().loading[key],
+//       getError: (key) => get().errors[key],
+//     }),
+//     {
+//       name: "zodiac-process-store",
+//       storage: createJSONStorage(() => localStorage),
+//     },
+//   ),
+// );

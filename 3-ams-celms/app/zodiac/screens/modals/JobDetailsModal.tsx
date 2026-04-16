@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useDataStore } from "../../store/useDataStore";
+import { useDataStore } from "../../store/core/useDataStore";
 import { useModalStore } from "../../store/useModalStore";
 import { WastePromptModal } from "./WastePromptModal";
 import { DeliveryHandlingModal } from "./DeliveryHandlingModal";
