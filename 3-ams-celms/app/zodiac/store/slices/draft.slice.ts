@@ -1,6 +1,6 @@
 import { StateCreator } from "zustand";
 import { generateJobRef } from "../shared/generateRef";
-import { PriceItem } from "@/types/zodiac.types";
+import { DeliveryType, PriceItem } from "../../types/zodiac.types";
 
 export interface DraftSlice {
   draft: {
@@ -10,7 +10,7 @@ export interface DraftSlice {
     quantity: number;
     width: number;
     height: number;
-    deliveryType: "PHYSICAL_PICKUP" | "PRINTER_DELIVERY";
+    deliveryType: DeliveryType;
   };
 
   prices: PriceItem[]; // required for calculation consistency

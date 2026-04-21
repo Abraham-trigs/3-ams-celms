@@ -18,16 +18,11 @@ export function useRealtimeSync() {
       if (lastVersionMap.current[entityId] >= version) return;
       lastVersionMap.current[entityId] = version;
 
-      const data =
-        event.payload?.job ??
-        event.payload?.stock ??
-        event.payload?.price ??
-        event.payload?.staff ??
-        event.payload;
+      const data = event.payload;
 
       switch (event.type) {
         // ─────────────────────────────
-        // JOB DOMAIN
+        // JOB DOMAIN (source of truth = JobService)
         // ─────────────────────────────
         case "job.created":
           store.addJob(data);
@@ -35,8 +30,15 @@ export function useRealtimeSync() {
 
         case "job.updated":
         case "job.paid":
-        case "job.staff_assigned":
           store.updateJob(data.id, data);
+          break;
+
+        case "job.staff_assigned":
+          // ⚠️ treat as projection only (safe merge)
+          store.updateJob(data.id, {
+            assignedStaffId: data.assignedStaffId,
+            assignedStaffSnapshot: data.assignedStaffSnapshot,
+          });
           break;
 
         // ─────────────────────────────
@@ -58,7 +60,7 @@ export function useRealtimeSync() {
           break;
 
         // ─────────────────────────────
-        // STAFF DOMAIN (NEW)
+        // STAFF DOMAIN
         // ─────────────────────────────
         case "staff.created":
           store.addStaff?.(data);
@@ -69,12 +71,13 @@ export function useRealtimeSync() {
           break;
 
         case "staff.status.updated":
-          store.setStaffStatus?.(data.id, data.status);
+          store.setStaffStatus?.(data.staffId, data.status);
           break;
 
         case "staff.assigned":
+          // ✔ single source rule: backend already defines status
           store.assignCurrentJob?.(data.staffId, data.jobId);
-          store.setStaffStatus?.(data.staffId, "BUSY");
+          store.setStaffStatus?.(data.staffId, data.status);
           break;
       }
     });

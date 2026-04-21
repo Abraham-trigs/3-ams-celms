@@ -36,7 +36,11 @@ export class PaymentService {
       await Outbox.add(tx, {
         type: "payment.confirmed",
         orgId,
-        payload: { payment, job },
+        payload: {
+          paymentId: payment.id,
+          jobId: job.id,
+          amount,
+        },
       });
 
       return job;

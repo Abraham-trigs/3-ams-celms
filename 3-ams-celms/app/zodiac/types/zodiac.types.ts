@@ -225,6 +225,7 @@ export interface WasteAudit {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 7. JOB ENGINE b2b
+// payment
 // ─────────────────────────────────────────────────────────────────────────────
 
 type JobStatus =
@@ -352,17 +353,32 @@ export type PaymentMethod =
   | "CARD"
   | "OTHER";
 
+export type PaymentRecordStatus = "PENDING" | "CONFIRMED" | "FAILED";
+
 export interface PaymentRecord {
   id: string;
   orgId: string;
   jobId: string;
   amount: number;
   method: PaymentMethod;
+  status: PaymentRecordStatus; // NEW
+
   reference?: string; // Momo ref, cheque number, etc.
   screenshotUrl?: string;
   confirmedBy?: string; // → StaffMember.id
   confirmedAt: string;
+  createdAt: string; // NEW
 }
+
+export interface PaymentLedger {
+  jobId: string;
+  totalDue: number;
+  totalPaid: number;
+  balance: number;
+  status: PaymentStatus;
+}
+
+// (recommended for partial payments)
 
 export type ExpenseCategory =
   | "MATERIAL"

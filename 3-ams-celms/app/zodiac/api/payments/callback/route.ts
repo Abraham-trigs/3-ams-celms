@@ -1,25 +1,31 @@
-import { NextResponse } from "next/server";
+import { apiHandler } from "@/server/core/apiHandler";
+import { PaymentService } from "@/lib/services/payment.service";
 
-export async function POST(req: Request) {
-  try {
+export const POST = apiHandler(
+  async ({ req }) => {
     const data = await req.json();
 
     const isSuccessful =
       data.ResponseCode === "000" || data.Data?.Status === "Success";
 
     if (!isSuccessful) {
-      return NextResponse.json({ received: true });
+      return { received: true };
     }
 
     const reference = data.Data?.ClientReference;
 
-    // DO NOT mutate UI or store here
-    // Instead: trigger backend domain logic (PaymentService or JobService)
+    await PaymentService.handleWebhookConfirmation({
+      orgId: data.Data?.OrgId,
+      jobId: data.Data?.JobId,
+      amount: data.Data?.Amount,
+      reference,
+      providerEventId: data.Data?.TransactionId,
+    });
 
-    console.log(`Payment verified: ${reference}`);
-
-    return NextResponse.json({ received: true });
-  } catch (err) {
-    return NextResponse.json({ error: "Webhook Failed" }, { status: 500 });
-  }
-}
+    return { received: true };
+  },
+  {
+    requireOrg: false,
+    requireAuth: false,
+  },
+);

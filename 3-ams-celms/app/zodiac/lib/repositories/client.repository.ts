@@ -1,12 +1,13 @@
 // lib/repositories/client.repository.ts
 
 import { prisma } from "@/lib/db/prisma";
+import { ClientType } from "../../types/zodiac.types";
 
 export class ClientRepository {
   static async create(data: {
     orgId: string;
     name: string;
-    type: "PRIVATE" | "COMPANY";
+    type: ClientType;
     phone: string;
     email?: string;
   }) {

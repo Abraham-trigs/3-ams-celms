@@ -1,6 +1,7 @@
 // lib/repositories/b2b.repository.ts
 
 import { prisma } from "@/lib/db/prisma";
+import { B2BStatus } from "../../types/zodiac.types";
 
 export class B2BRepository {
   static async create(data: {
@@ -22,10 +23,7 @@ export class B2BRepository {
     });
   }
 
-  static async updateStatus(
-    id: string,
-    status: "PENDING" | "ACCEPTED" | "NEGOTIATING" | "REJECTED" | "COMPLETED",
-  ) {
+  static async updateStatus(id: string, status: B2BStatus) {
     return prisma.b2BPush.update({
       where: { id },
       data: { status },

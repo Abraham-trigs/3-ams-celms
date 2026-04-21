@@ -2,18 +2,24 @@ import { prisma } from "@/lib/db/prisma";
 import { eventBus } from "@/server/events/eventBus";
 
 export async function processOutbox() {
-  const events = await prisma.outboxEvent.findMany({
+  // 1. Atomically claim events (prevents double workers picking same rows)
+  await prisma.outboxEvent.updateMany({
     where: { status: "PENDING" },
+    data: { status: "PROCESSING" },
+  });
+
+  // 2. Fetch claimed events
+  const events = await prisma.outboxEvent.findMany({
+    where: { status: "PROCESSING" },
     take: 50,
     orderBy: { createdAt: "asc" },
   });
 
   for (const event of events) {
     try {
-      // 1. publish to in-app event system
+      // publish to realtime/event system
       eventBus.publish(event.type, event.payload);
 
-      // 2. mark as sent
       await prisma.outboxEvent.update({
         where: { id: event.id },
         data: { status: "SENT" },
@@ -21,7 +27,10 @@ export async function processOutbox() {
     } catch (err) {
       await prisma.outboxEvent.update({
         where: { id: event.id },
-        data: { status: "FAILED" },
+        data: {
+          status: "FAILED",
+          error: err instanceof Error ? err.message : "Unknown error",
+        },
       });
     }
   }

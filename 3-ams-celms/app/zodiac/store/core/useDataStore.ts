@@ -6,29 +6,33 @@ import { createInventorySlice } from "../slices/inventory.slice";
 import { createJobSlice } from "../slices/job.slice";
 import { createDraftSlice } from "../slices/draft.slice";
 import { createStaffSlice } from "../slices/staff.slice";
+import { createPaymentSlice } from "../slices/payment.slice";
 
 export const useDataStore = create(
   persist(
     (set, get, api) => ({
       ...createDraftSlice(set, get, api),
 
-      // domain state (NOT persisted)
       ...createPriceSlice(set, get, api),
       ...createInventorySlice(set, get, api),
       ...createJobSlice(set, get, api),
       ...createStaffSlice(set, get, api),
+      ...createPaymentSlice(set, get, api),
 
       initData: async () => {
-        const { loadPrices, loadInventory, loadJobs } = get();
+        const { loadPrices, loadInventory, loadJobs, loadStaff } = get();
 
-        await Promise.all([loadPrices?.(), loadInventory?.(), loadJobs?.()]);
+        await Promise.all([
+          loadPrices?.(),
+          loadInventory?.(),
+          loadJobs?.(),
+          loadStaff?.(),
+        ]);
       },
     }),
     {
       name: "zodiac-store",
-
-      // 👇 CRITICAL FIX
-      partialize: (state) => ({
+      partialize: (state: any) => ({
         draft: state.draft,
       }),
     },
