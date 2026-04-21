@@ -27,6 +27,8 @@ export class JobService {
     } = params;
 
     return UnitOfWork.run(async (tx) => {
+      const now = new Date().toISOString();
+
       const isLargeFormat = service.unit === "sqft" || service.unit === "sqm";
 
       const units = isLargeFormat ? (width || 1) * (height || 1) : 1;
@@ -49,6 +51,21 @@ export class JobService {
         },
         tx,
       );
+
+      // ─────────────────────────────
+      // CLIENT PROJECTION (JOB OWNERSHIP ONLY)
+      // ─────────────────────────────
+      await tx.client.update({
+        where: { id: clientId },
+        data: {
+          lastJobId: job.id,
+          lastJobDate: now,
+          isNew: false,
+          totalJobs: {
+            increment: 1,
+          },
+        },
+      });
 
       if (service.stock_ref) {
         await StockRepository.deduct(
@@ -99,7 +116,13 @@ export class JobService {
 
   static async confirmPayment(orgId: string, jobId: string, ref: string) {
     return UnitOfWork.run(async (tx) => {
+      const now = new Date().toISOString();
+
       const job = await JobRepository.confirmPayment(orgId, jobId, ref, tx);
+
+      // ─────────────────────────────
+      // REMOVED: client.totalSpend update (handled by PaymentService only)
+      // ─────────────────────────────
 
       await Outbox.add(tx, {
         type: "job.paid",

@@ -1,20 +1,17 @@
-import { apiHandler } from "@/server/core/apiHandler";
-import { JobService } from "@/server/services/job.service";
+import { eventBus } from "@/server/events/eventBus";
+import { ClientRepository } from "@/lib/repositories/client.repository";
 
-// GET
-export const GET = apiHandler(async ({ orgId }) => {
-  return JobService.loadJobs(orgId);
-});
+export const clientService = {
+  async create(data: any) {
+    const client = await ClientRepository.create(data);
 
-// POST
-export const POST = apiHandler(
-  async ({ orgId, body }) => {
-    return JobService.createJob({
-      ...body,
-      orgId,
-    });
+    eventBus
+      .publish("client.created", client, {
+        orgId: data.orgId,
+        entityId: client.id,
+      })
+      .catch(console.error);
+
+    return client;
   },
-  {
-    requireOrg: true,
-  },
-);
+};

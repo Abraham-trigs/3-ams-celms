@@ -1,7 +1,21 @@
-// lib/repositories/client.repository.ts
-
 import { prisma } from "@/lib/db/prisma";
-import { ClientType } from "../../types/zodiac.types";
+import { ClientType } from "@/types/zodiac.types";
+
+type UpdateClientInput = Partial<{
+  name: string;
+  type: ClientType;
+  phone: string;
+  email: string;
+  companyName: string;
+  location: string;
+  profilePictureUrl: string;
+  notes: string;
+
+  lastStaffId: string;
+  mostPrintedServiceId: string;
+  lastJobDate: string;
+  isNew: boolean;
+}>;
 
 export class ClientRepository {
   static async create(data: {
@@ -11,7 +25,12 @@ export class ClientRepository {
     phone: string;
     email?: string;
   }) {
-    return prisma.client.create({ data });
+    return prisma.client.create({
+      data: {
+        ...data,
+        isNew: true,
+      },
+    });
   }
 
   static async list(orgId: string) {
@@ -27,9 +46,12 @@ export class ClientRepository {
     });
   }
 
-  static async update(orgId: string, id: string, data: any) {
+  static async update(orgId: string, id: string, data: UpdateClientInput) {
     return prisma.client.update({
-      where: { id },
+      where: {
+        id,
+        orgId, // IMPORTANT: enforce tenant safety (requires composite or unique constraint)
+      },
       data,
     });
   }
