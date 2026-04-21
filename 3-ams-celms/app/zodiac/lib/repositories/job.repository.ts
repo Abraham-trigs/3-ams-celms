@@ -1,27 +1,46 @@
 import { prisma } from "@/lib/db/prisma";
+import { DbClient } from "@/lib/db/prisma-client";
 import { JobStatus, PaymentStatus } from "@prisma/client";
 
+type TxOrDb = DbClient | undefined;
+
+const getDb = (tx?: TxOrDb) => {
+  if (tx) return tx;
+  return prisma;
+};
+
+/**
+ * Repository must be transaction-aware.
+ * If a tx is passed, ALL operations must use it.
+ * No mixed implicit writes.
+ */
 export class JobRepository {
-  static async create(data: {
-    orgId: string;
-    clientId: string;
-    serviceId: string;
-    serviceName: string;
-    quantity: number;
-    width?: number;
-    height?: number;
-    unit?: string;
-    totalPrice: number;
-    costPrice?: number;
-    profitMargin?: number;
-    assignedStaffId?: string;
-    notes?: string;
-  }) {
-    return prisma.job.create({ data });
+  static async create(
+    data: {
+      orgId: string;
+      clientId: string;
+      serviceId: string;
+      serviceName: string;
+      quantity: number;
+      width?: number;
+      height?: number;
+      unit?: string;
+      totalPrice: number;
+      costPrice?: number;
+      profitMargin?: number;
+      assignedStaffId?: string;
+      notes?: string;
+    },
+    tx?: DbClient,
+  ) {
+    const db = getDb(tx);
+    return db.job.create({ data });
   }
 
-  static async findById(orgId: string, id: string) {
-    return prisma.job.findFirst({
+  static async findById(orgId: string, id: string, tx?: DbClient) {
+    const db = getDb(tx);
+
+    return db.job.findFirst({
       where: { id, orgId },
       include: {
         client: true,
@@ -38,12 +57,17 @@ export class JobRepository {
       take?: number;
       skip?: number;
     },
+    tx?: DbClient,
   ) {
-    return prisma.job.findMany({
+    const db = getDb(tx);
+
+    return db.job.findMany({
       where: {
         orgId,
         ...(params?.status && { status: params.status }),
-        ...(params?.paymentStatus && { paymentStatus: params.paymentStatus }),
+        ...(params?.paymentStatus && {
+          paymentStatus: params.paymentStatus,
+        }),
       },
       orderBy: { createdAt: "desc" },
       take: params?.take ?? 50,
@@ -51,41 +75,59 @@ export class JobRepository {
     });
   }
 
-  static async updateStatus(orgId: string, jobId: string, status: JobStatus) {
-    return prisma.job.update({
+  static async updateStatus(
+    orgId: string,
+    jobId: string,
+    status: JobStatus,
+    tx?: DbClient,
+  ) {
+    const db = getDb(tx);
+
+    return db.job.update({
       where: { id: jobId, orgId },
       data: { status },
     });
   }
 
-  static async assignStaff(orgId: string, jobId: string, staffId: string) {
-    return prisma.job.update({
+  static async assignStaff(
+    orgId: string,
+    jobId: string,
+    staffId: string,
+    tx?: DbClient,
+  ) {
+    const db = getDb(tx);
+
+    return db.job.update({
       where: { id: jobId, orgId },
       data: { assignedStaffId: staffId },
     });
   }
 
-  // ✅ RENAMED: markPaid → confirmPayment (domain correct)
   static async confirmPayment(
     orgId: string,
     jobId: string,
     reference?: string,
+    tx?: DbClient,
   ) {
-    return prisma.job.update({
+    const db = getDb(tx);
+
+    return db.job.update({
       where: { id: jobId, orgId },
       data: {
-        paymentStatus: "PAID",
+        paymentStatus: PaymentStatus.PAID,
         isPaid: true,
         paymentRef: reference,
       },
     });
   }
 
-  static async deleteCompleted(orgId: string) {
-    return prisma.job.deleteMany({
+  static async deleteCompleted(orgId: string, tx?: DbClient) {
+    const db = getDb(tx);
+
+    return db.job.deleteMany({
       where: {
         orgId,
-        status: "COMPLETED",
+        status: JobStatus.COMPLETED,
       },
     });
   }

@@ -1,13 +1,21 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { createRealtimeClient } from "@/lib/realtime/client";
 import { useDataStore } from "@/store/data.store";
 
 export function useRealtimeSync() {
+  const handledEvents = useRef<Set<string>>(new Set());
+
   useEffect(() => {
     const unsubscribe = createRealtimeClient((event) => {
       const store = useDataStore.getState();
+
+      // basic dedupe (prevents double-processing from reconnects)
+      const eventKey = `${event.type}:${event.payload?.id ?? ""}`;
+
+      if (handledEvents.current.has(eventKey)) return;
+      handledEvents.current.add(eventKey);
 
       switch (event.type) {
         case "job.created":
@@ -15,6 +23,8 @@ export function useRealtimeSync() {
           break;
 
         case "job.updated":
+        case "job.paid":
+        case "job.staff_assigned":
           store.updateJob(event.payload.id, event.payload);
           break;
 
@@ -25,9 +35,15 @@ export function useRealtimeSync() {
         case "price.updated":
           store.updatePrice(event.payload.id, event.payload.priceGHS);
           break;
+
+        default:
+          break;
       }
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      handledEvents.current.clear();
+    };
   }, []);
 }

@@ -1,5 +1,6 @@
 import { StateCreator } from "zustand";
 import { generateJobRef } from "../shared/generateRef";
+import { PriceItem } from "@/types/zodiac.types";
 
 export interface DraftSlice {
   draft: {
@@ -12,8 +13,12 @@ export interface DraftSlice {
     deliveryType: "PHYSICAL_PICKUP" | "PRINTER_DELIVERY";
   };
 
+  prices: PriceItem[]; // required for calculation consistency
+
   setDraft: (patch: Partial<DraftSlice["draft"]>) => void;
   resetDraft: () => void;
+
+  setPrices: (prices: PriceItem[]) => void;
 
   calculateLiveEstimate: () => number;
 }
@@ -28,6 +33,10 @@ export const createDraftSlice: StateCreator<DraftSlice> = (set, get) => ({
     height: 0,
     deliveryType: "PHYSICAL_PICKUP",
   },
+
+  prices: [],
+
+  setPrices: (prices) => set({ prices }),
 
   setDraft: (patch) =>
     set((state) => ({
@@ -50,12 +59,23 @@ export const createDraftSlice: StateCreator<DraftSlice> = (set, get) => ({
   calculateLiveEstimate: () => {
     const state = get();
 
-    const selectedService = state.prices?.find(
+    const selectedService = state.prices.find(
       (p) => p.id === state.draft.serviceId,
     );
 
     if (!selectedService) return 0;
 
-    return (selectedService.basePrice || 0) * (state.draft.quantity || 1);
+    const base = selectedService.priceGHS;
+
+    const quantity = state.draft.quantity || 1;
+
+    const isAreaBased =
+      selectedService.unit === "sqft" || selectedService.unit === "sqm";
+
+    const area = isAreaBased
+      ? (state.draft.width || 1) * (state.draft.height || 1)
+      : 1;
+
+    return base * quantity * area;
   },
 });

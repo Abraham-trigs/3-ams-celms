@@ -1,12 +1,10 @@
-import { prisma } from "@/lib/db/prisma";
 import { JobRepository } from "@zodiac/lib/repositories/job.repository";
 import { StockRepository } from "@zodiac/lib/repositories/stock.repository";
 import { PriceItem } from "@zodiac/types/zodiac.types";
+import { UnitOfWork } from "@/lib/db/unitOfWork";
+import { Outbox } from "@/lib/db/outbox";
 
 export class JobService {
-  /**
-   * CREATE JOB (source of truth)
-   */
   static async createJob(params: {
     orgId: string;
     clientId: string;
@@ -28,34 +26,43 @@ export class JobService {
       notes,
     } = params;
 
-    return prisma.$transaction(async (tx) => {
+    return UnitOfWork.run(async (tx) => {
       const isLargeFormat = service.unit === "sqft" || service.unit === "sqm";
 
       const units = isLargeFormat ? (width || 1) * (height || 1) : 1;
 
       const totalPrice = units * quantity * service.priceGHS;
 
-      // ⚠️ NOTE: still using repository (non-tx safe for now)
+      const job = await JobRepository.create(
+        {
+          orgId,
+          clientId,
+          serviceId: service.id,
+          serviceName: service.name,
+          quantity,
+          width,
+          height,
+          unit: service.unit,
+          totalPrice,
+          assignedStaffId,
+          notes,
+        },
+        tx,
+      );
+
       if (service.stock_ref) {
         await StockRepository.deduct(
           orgId,
           service.stock_ref,
           units * quantity,
+          tx,
         );
       }
 
-      const job = await JobRepository.create({
+      await Outbox.add(tx, {
+        type: "job.created",
         orgId,
-        clientId,
-        serviceId: service.id,
-        serviceName: service.name,
-        quantity,
-        width,
-        height,
-        unit: service.unit,
-        totalPrice,
-        assignedStaffId,
-        notes,
+        payload: job,
       });
 
       return job;
@@ -63,15 +70,45 @@ export class JobService {
   }
 
   static async updateStatus(orgId: string, jobId: string, status: any) {
-    return JobRepository.updateStatus(orgId, jobId, status);
+    return UnitOfWork.run(async (tx) => {
+      const job = await JobRepository.updateStatus(orgId, jobId, status, tx);
+
+      await Outbox.add(tx, {
+        type: "job.updated",
+        orgId,
+        payload: job,
+      });
+
+      return job;
+    });
   }
 
   static async assignStaff(orgId: string, jobId: string, staffId: string) {
-    return JobRepository.assignStaff(orgId, jobId, staffId);
+    return UnitOfWork.run(async (tx) => {
+      const job = await JobRepository.assignStaff(orgId, jobId, staffId, tx);
+
+      await Outbox.add(tx, {
+        type: "job.staff_assigned",
+        orgId,
+        payload: job,
+      });
+
+      return job;
+    });
   }
 
   static async confirmPayment(orgId: string, jobId: string, ref: string) {
-    return JobRepository.confirmPayment(orgId, jobId, ref);
+    return UnitOfWork.run(async (tx) => {
+      const job = await JobRepository.confirmPayment(orgId, jobId, ref, tx);
+
+      await Outbox.add(tx, {
+        type: "job.paid",
+        orgId,
+        payload: job,
+      });
+
+      return job;
+    });
   }
 
   static async loadJobs(orgId: string) {
