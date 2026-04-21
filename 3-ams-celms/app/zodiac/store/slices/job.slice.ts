@@ -3,12 +3,12 @@ import { JobTicket } from "@/types/zodiac.types";
 
 export interface JobSlice {
   jobs: JobTicket[];
-  setJobs: (data: JobTicket[]) => void;
 
+  // UI state only
+  setJobs: (data: JobTicket[]) => void;
   addJob: (job: JobTicket) => void;
-  updateJobStatus: (id: string, status: JobTicket["status"]) => void;
-  assignStaff: (id: string, staffId: string) => void;
-  confirmPayment: (id: string, ref: string) => void;
+  updateJob: (id: string, patch: Partial<JobTicket>) => void;
+  removeJob: (id: string) => void;
 }
 
 export const createJobSlice: StateCreator<JobSlice> = (set) => ({
@@ -16,24 +16,18 @@ export const createJobSlice: StateCreator<JobSlice> = (set) => ({
 
   setJobs: (data) => set({ jobs: data }),
 
-  addJob: (job) => set((state) => ({ jobs: [job, ...state.jobs] })),
-
-  updateJobStatus: (id, status) =>
+  addJob: (job) =>
     set((state) => ({
-      jobs: state.jobs.map((j) => (j.id === id ? { ...j, status } : j)),
+      jobs: [job, ...state.jobs],
     })),
 
-  assignStaff: (id, staffId) =>
+  updateJob: (id, patch) =>
     set((state) => ({
-      jobs: state.jobs.map((j) =>
-        j.id === id ? { ...j, assignedStaffId: staffId } : j,
-      ),
+      jobs: state.jobs.map((j) => (j.id === id ? { ...j, ...patch } : j)),
     })),
 
-  confirmPayment: (id, ref) =>
+  removeJob: (id) =>
     set((state) => ({
-      jobs: state.jobs.map((j) =>
-        j.id === id ? { ...j, isPaid: true, paymentRef: ref } : j,
-      ),
+      jobs: state.jobs.filter((j) => j.id !== id),
     })),
 });

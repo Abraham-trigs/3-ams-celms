@@ -1,6 +1,6 @@
 import { StateCreator } from "zustand";
-import { StockItem } from "@/types/zodiac.types";
-import { addStock, subtractStock } from "@/store/domain/inventory.engine";
+import { StockItem } from "../../types/zodiac.types";
+import { addStock, subtractStock } from "../../store/domains/inventory.engine";
 
 export interface InventorySlice {
   inventory: StockItem[];

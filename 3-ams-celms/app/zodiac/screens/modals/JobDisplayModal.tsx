@@ -2,16 +2,22 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useDataStore } from "../../store/core/useDataStore";
+
+import {
+  useDraft,
+  usePrices,
+  useSelectedService,
+  useLiveEstimate,
+} from "@zodiac/store/selectors/data.selectors";
 
 export function JobDisplayModal() {
-  const { draft, prices, calculateLiveEstimate } = useDataStore();
+  const draft = useDraft();
+  const prices = usePrices();
 
-  // ✅ null = CENTER (idle)
+  const selectedService = useSelectedService();
+  const total = useLiveEstimate();
+
   const [sliderIndex, setSliderIndex] = useState<number | null>(null);
-
-  const selectedService = prices.find((p) => p.id === draft.serviceId);
-  const total = calculateLiveEstimate();
 
   const allLines = [
     { label: "Job type:", value: selectedService?.category || "---" },
@@ -27,7 +33,6 @@ export function JobDisplayModal() {
 
   const ITEMS_PER_PAGE = 4;
 
-  // ✅ page logic
   const page = sliderIndex !== null && sliderIndex >= 2 ? 1 : 0;
 
   const visibleLines = allLines.slice(
@@ -38,24 +43,20 @@ export function JobDisplayModal() {
   const canGoNext = sliderIndex === null || sliderIndex < 3;
   const canGoPrev = sliderIndex === null || sliderIndex > 0;
 
-  // ✅ RIGHT CLICK → jump to last if idle
   const next = () => {
     if (sliderIndex === null) return setSliderIndex(3);
     if (sliderIndex < 3) return setSliderIndex((s) => (s as number) + 1);
   };
 
-  // ✅ LEFT CLICK → jump to first if idle
   const prev = () => {
     if (sliderIndex === null) return setSliderIndex(0);
     if (sliderIndex > 0) return setSliderIndex((s) => (s as number) - 1);
 
-    // if already at first → go back to center
     setSliderIndex(null);
   };
 
-  // ✅ Position mapping
   const getX = () => {
-    if (sliderIndex === null) return 1.5 * 16; // center
+    if (sliderIndex === null) return 1.5 * 16;
     return sliderIndex * 16;
   };
 
@@ -66,6 +67,7 @@ export function JobDisplayModal() {
         <span className="text-[10px] text-cyan-400 font-black tracking-widest bg-cyan-400/10 px-2 py-1 rounded">
           REF: {draft.id || "---"}
         </span>
+
         <span className="text-[9px] text-white/20 uppercase font-black tracking-tighter">
           Draft Receiver
         </span>
@@ -89,7 +91,6 @@ export function JobDisplayModal() {
 
         {/* Navigation */}
         <div className="flex items-center justify-between mt-8">
-          {/* LEFT */}
           <button
             onClick={prev}
             disabled={!canGoPrev}
@@ -98,7 +99,6 @@ export function JobDisplayModal() {
             ←
           </button>
 
-          {/* DOTS */}
           <div className="relative flex items-center justify-between w-[64px]">
             {[0, 1, 2, 3].map((i) => (
               <div
@@ -109,7 +109,6 @@ export function JobDisplayModal() {
               />
             ))}
 
-            {/* GLIDER */}
             <motion.div
               className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.8)]"
               animate={{
@@ -124,7 +123,6 @@ export function JobDisplayModal() {
             />
           </div>
 
-          {/* RIGHT */}
           <button
             onClick={next}
             disabled={!canGoNext}

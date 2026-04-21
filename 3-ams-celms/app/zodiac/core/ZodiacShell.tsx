@@ -8,10 +8,19 @@ import { TopBar } from "../ui/TopBar";
 import { BottomBar } from "../ui/BottomBar";
 import { ScreenID } from "../view/screen.registry";
 import { getCachedScreen } from "../view/screen.cache";
+import { useAccessStore } from "../store/useAccessStore";
+import { useAppBootStore } from "../store/useAppBootStore";
+import { useDataStore } from "../store/core/useDataStore";
 
 export function ZodiacShell() {
   const { activeScreenId, viewMode, sharedAction, setSharedAction, setScreen } =
     useZodiac();
+
+  const bootstrapAccess = useAccessStore((s) => s.bootstrapAccess);
+  const initData = useDataStore((s) => s.initData);
+
+  const isHydrated = useAppBootStore((s) => s.isHydrated);
+  const setHydrated = useAppBootStore((s) => s.setHydrated);
 
   const TopModal = useModalStore((s) => s.activeTopComponent);
   const DownModal = useModalStore((s) => s.activeDownComponent);
@@ -28,24 +37,82 @@ export function ZodiacShell() {
 
   const isDetail = viewMode === "DETAIL";
 
-  // useEffect(() => {
-  //   if (!sharedAction) return;
-  //   sharedAction.onPress?.();
-  //   setSharedAction(null);
-  // }, [sharedAction, setSharedAction]);
+  // =====================================================
+  // 🔥 BOOT STRAP (AUTH-FIRST, DATA BACKGROUND)
+  // =====================================================
+  useEffect(() => {
+    let alive = true;
 
+    const boot = async () => {
+      try {
+        // 1. AUTH (CRITICAL GATE)
+        await bootstrapAccess();
+
+        if (!alive) return;
+
+        // 2. UNLOCK UI IMMEDIATELY AFTER AUTH
+        setHydrated(true);
+
+        // 3. DATA LOAD (NON-BLOCKING)
+        initData().catch((err) => {
+          console.error("Data boot failed:", err);
+        });
+      } catch (err) {
+        console.error("Auth boot failed:", err);
+
+        // fallback: still allow UI (degraded mode)
+        if (alive) setHydrated(true);
+      }
+    };
+
+    boot();
+
+    return () => {
+      alive = false;
+    };
+  }, [bootstrapAccess, initData, setHydrated]);
+
+  // =====================================================
+  // shared action trigger
+  // =====================================================
+  useEffect(() => {
+    if (!sharedAction) return;
+    sharedAction.onPress?.();
+    setSharedAction(null);
+  }, [sharedAction, setSharedAction]);
+
+  // =====================================================
+  // URL sync
+  // =====================================================
   useEffect(() => {
     const syncFromUrl = () => {
       const path = window.location.pathname.replace("/", "").toUpperCase();
+
       if (path) setScreen(path as ScreenID);
     };
+
     window.addEventListener("popstate", syncFromUrl);
     return () => window.removeEventListener("popstate", syncFromUrl);
   }, [setScreen]);
 
+  // =====================================================
+  // HYDRATION GUARD
+  // =====================================================
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-center h-full text-white">
+        Loading system...
+      </div>
+    );
+  }
+
+  // =====================================================
+  // screen resolution
+  // =====================================================
   const cached = getCachedScreen(activeScreenId);
-  const TopRender = TopModal || cached.Top || TopZoneComponent;
-  const DownRender = DownModal || cached.Down || DownZoneComponent;
+
+  const TopRender = TopModal || cached?.Top || TopZoneComponent;
+  const DownRender = DownModal || cached?.Down || DownZoneComponent;
 
   return (
     <div className="zodiac-shell flex flex-col h-full overflow-hidden bg-black text-white relative">

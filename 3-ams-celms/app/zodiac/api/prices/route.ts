@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { priceService } from "@/server/services/price.service";
-import { eventBus } from "@/server/events/eventBus";
+import { priceService } from "@zodiac/services/price.service";
+import { eventBus } from "@/eventBus";
 
 export async function GET(req: NextRequest) {
   const orgId = new URL(req.url).searchParams.get("orgId");

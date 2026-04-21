@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jobService } from "@/server/services/job.service";
+import { JobService } from "@zodiac/services/job.service";
 import { eventBus } from "@/server/events/eventBus";
 
 export async function PATCH(
@@ -8,9 +8,8 @@ export async function PATCH(
 ) {
   try {
     const body = await req.json();
-
-    // ✅ MULTI-TENANT SAFETY (CRITICAL)
     const orgId = req.headers.get("x-org-id");
+
     if (!orgId) {
       return NextResponse.json(
         { error: "Missing org context" },
@@ -18,12 +17,12 @@ export async function PATCH(
       );
     }
 
-    const updated = await jobService.update(params.id, {
-      ...body,
+    const updated = await JobService.updateStatus(
       orgId,
-    });
+      params.id,
+      body.status,
+    );
 
-    // ✅ REALTIME EVENT (SERVER ORIGIN TAGGED)
     eventBus.publish({
       type: "job.updated",
       payload: updated,
@@ -33,7 +32,6 @@ export async function PATCH(
       },
     });
 
-    // ✅ CONSISTENT RESPONSE SHAPE
     return NextResponse.json({
       data: updated,
     });

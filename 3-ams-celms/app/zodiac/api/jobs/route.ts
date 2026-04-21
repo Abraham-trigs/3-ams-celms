@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jobService } from "@/server/services/job.service";
+import { JobService } from "@/server/services/job.service";
 import { eventBus } from "@/server/events/eventBus";
 
 export async function GET(req: NextRequest) {
@@ -13,18 +13,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "orgId is required" }, { status: 400 });
   }
 
-  const data = await jobService.list(orgId, { page, perPage });
+  const data = await JobService.loadJobs(orgId);
 
   return NextResponse.json({
     data,
+    meta: { page, perPage },
   });
 }
+
+// POST
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // ✅ MULTI-TENANT SAFETY
     const orgId = req.headers.get("x-org-id");
     if (!orgId) {
       return NextResponse.json(
@@ -33,12 +35,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const job = await jobService.create({
+    const job = await JobService.createJob({
       ...body,
       orgId,
     });
 
-    // ✅ REALTIME EVENT
     eventBus.publish({
       type: "job.created",
       payload: job,
@@ -48,12 +49,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(
-      {
-        data: job,
-      },
-      { status: 201 },
-    );
+    return NextResponse.json({ data: job }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }

@@ -1,5 +1,3 @@
-// lib/repositories/stock.repository.ts
-
 import { prisma } from "@/lib/db/prisma";
 
 export class StockRepository {
@@ -18,7 +16,7 @@ export class StockRepository {
 
   static async deduct(orgId: string, stockItemId: string, amount: number) {
     return prisma.stockItem.update({
-      where: { id: stockItemId },
+      where: { id: stockItemId, orgId },
       data: {
         totalRemaining: {
           decrement: amount,
@@ -34,7 +32,7 @@ export class StockRepository {
     unitCost: number,
   ) {
     return prisma.stockItem.update({
-      where: { id: stockItemId },
+      where: { id: stockItemId, orgId },
       data: {
         totalRemaining: {
           increment: quantity,

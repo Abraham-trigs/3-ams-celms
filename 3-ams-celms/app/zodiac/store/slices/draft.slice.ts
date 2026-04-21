@@ -1,5 +1,5 @@
 import { StateCreator } from "zustand";
-import { generateJobRef } from "@/utils/generateRef";
+import { generateJobRef } from "../shared/generateRef";
 
 export interface DraftSlice {
   draft: {
@@ -14,9 +14,11 @@ export interface DraftSlice {
 
   setDraft: (patch: Partial<DraftSlice["draft"]>) => void;
   resetDraft: () => void;
+
+  calculateLiveEstimate: () => number;
 }
 
-export const createDraftSlice: StateCreator<DraftSlice> = (set) => ({
+export const createDraftSlice: StateCreator<DraftSlice> = (set, get) => ({
   draft: {
     id: generateJobRef(),
     clientName: "",
@@ -44,4 +46,16 @@ export const createDraftSlice: StateCreator<DraftSlice> = (set) => ({
         deliveryType: "PHYSICAL_PICKUP",
       },
     }),
+
+  calculateLiveEstimate: () => {
+    const state = get();
+
+    const selectedService = state.prices?.find(
+      (p) => p.id === state.draft.serviceId,
+    );
+
+    if (!selectedService) return 0;
+
+    return (selectedService.basePrice || 0) * (state.draft.quantity || 1);
+  },
 });

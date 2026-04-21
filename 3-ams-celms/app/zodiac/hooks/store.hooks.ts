@@ -2,6 +2,10 @@
 
 import { useShallow } from "zustand/react/shallow";
 import { useDataStore } from "../store/core/useDataStore";
+import {
+  getSelectedService,
+  calculateLiveEstimate,
+} from "@store/selectors/data.selectors";
 
 /**
  * Generic slice hook generator to prevent full-store subscriptions
@@ -13,7 +17,6 @@ const slice =
 
 /* =========================
    STATE SLICES (READ ONLY)
-   Usage: const jobs = useJobs();
 ========================= */
 export const useDraft = slice("draft");
 export const usePrices = slice("prices");
@@ -24,8 +27,13 @@ export const useJobFiles = slice("jobFiles");
 export const useIsLoading = slice("isLoading");
 
 /* =========================
-   ACTION HOOK (WRITE OPS)
-   Usage: const { createJob } = useDataActions();
+   SELECTORS (PURE EXPORT ONLY)
+   NO WRAPPER FUNCTIONS
+========================= */
+export { getSelectedService, calculateLiveEstimate };
+
+/* =========================
+   ACTION HOOK (WRITE OPS ONLY)
 ========================= */
 export const useDataActions = () =>
   useDataStore(
@@ -33,7 +41,6 @@ export const useDataActions = () =>
       // Draft Management
       setDraft: s.setDraft,
       resetDraft: s.resetDraft,
-      calculateLiveEstimate: s.calculateLiveEstimate,
 
       // Core Business Logic
       createJob: s.createJob,

@@ -1,17 +1,11 @@
-// lib/services/job.service.ts
-
 import { prisma } from "@/lib/db/prisma";
-import { JobRepository } from "@/lib/repositories/job.repository";
-import { StockRepository } from "@/lib/repositories/stock.repository";
-import { PriceItem } from "@prisma/client";
+import { JobRepository } from "@zodiac/lib/repositories/job.repository";
+import { StockRepository } from "@zodiac/lib/repositories/stock.repository";
+import { PriceItem } from "@zodiac/types/zodiac.types";
 
 export class JobService {
   /**
-   * FULL TRANSACTION:
-   * - validate service
-   * - calculate price
-   * - deduct stock
-   * - create job
+   * CREATE JOB (source of truth)
    */
   static async createJob(params: {
     orgId: string;
@@ -35,26 +29,21 @@ export class JobService {
     } = params;
 
     return prisma.$transaction(async (tx) => {
-      // 1. Calculate units
       const isLargeFormat = service.unit === "sqft" || service.unit === "sqm";
 
       const units = isLargeFormat ? (width || 1) * (height || 1) : 1;
 
       const totalPrice = units * quantity * service.priceGHS;
 
-      // 2. Deduct stock if linked
+      // STOCK DEDUCTION (FIXED METHOD NAME + CONSISTENT REPO USAGE)
       if (service.stockRefId) {
-        await tx.stockItem.update({
-          where: { id: service.stockRefId },
-          data: {
-            totalRemaining: {
-              decrement: units * quantity,
-            },
-          },
-        });
+        await StockRepository.deduct(
+          orgId,
+          service.stockRefId,
+          units * quantity,
+        );
       }
 
-      // 3. Create job
       const job = await tx.job.create({
         data: {
           orgId,
@@ -81,5 +70,13 @@ export class JobService {
 
   static async assignStaff(orgId: string, jobId: string, staffId: string) {
     return JobRepository.assignStaff(orgId, jobId, staffId);
+  }
+
+  static async confirmPayment(orgId: string, jobId: string, ref: string) {
+    return JobRepository.confirmPayment(orgId, jobId, ref);
+  }
+
+  static async loadJobs(orgId: string) {
+    return JobRepository.findAll(orgId);
   }
 }

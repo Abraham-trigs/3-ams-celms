@@ -8,11 +8,17 @@ import { createDraftSlice } from "../slices/draft.slice";
 
 export const useDataStore = create(
   persist(
-    (...a) => ({
-      ...createPriceSlice(...a),
-      ...createInventorySlice(...a),
-      ...createJobSlice(...a),
-      ...createDraftSlice(...a),
+    (set, get, api) => ({
+      ...createPriceSlice(set, get, api),
+      ...createInventorySlice(set, get, api),
+      ...createJobSlice(set, get, api),
+      ...createDraftSlice(set, get, api),
+
+      initData: async () => {
+        const { loadPrices, loadInventory, loadJobs } = get();
+
+        await Promise.all([loadPrices?.(), loadInventory?.(), loadJobs?.()]);
+      },
     }),
     {
       name: "zodiac-store",
