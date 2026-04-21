@@ -35,29 +35,27 @@ export class JobService {
 
       const totalPrice = units * quantity * service.priceGHS;
 
-      // STOCK DEDUCTION (FIXED METHOD NAME + CONSISTENT REPO USAGE)
-      if (service.stockRefId) {
+      // ⚠️ NOTE: still using repository (non-tx safe for now)
+      if (service.stock_ref) {
         await StockRepository.deduct(
           orgId,
-          service.stockRefId,
+          service.stock_ref,
           units * quantity,
         );
       }
 
-      const job = await tx.job.create({
-        data: {
-          orgId,
-          clientId,
-          serviceId: service.id,
-          serviceName: service.name,
-          quantity,
-          width,
-          height,
-          unit: service.unit,
-          totalPrice,
-          assignedStaffId,
-          notes,
-        },
+      const job = await JobRepository.create({
+        orgId,
+        clientId,
+        serviceId: service.id,
+        serviceName: service.name,
+        quantity,
+        width,
+        height,
+        unit: service.unit,
+        totalPrice,
+        assignedStaffId,
+        notes,
       });
 
       return job;
@@ -77,6 +75,6 @@ export class JobService {
   }
 
   static async loadJobs(orgId: string) {
-    return JobRepository.findAll(orgId);
+    return JobRepository.list(orgId);
   }
 }

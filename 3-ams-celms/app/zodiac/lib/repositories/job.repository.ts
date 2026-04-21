@@ -1,5 +1,3 @@
-// lib/repositories/job.repository.ts
-
 import { prisma } from "@/lib/db/prisma";
 import { JobStatus, PaymentStatus } from "@prisma/client";
 
@@ -55,21 +53,26 @@ export class JobRepository {
 
   static async updateStatus(orgId: string, jobId: string, status: JobStatus) {
     return prisma.job.update({
-      where: { id: jobId },
+      where: { id: jobId, orgId },
       data: { status },
     });
   }
 
   static async assignStaff(orgId: string, jobId: string, staffId: string) {
     return prisma.job.update({
-      where: { id: jobId },
+      where: { id: jobId, orgId },
       data: { assignedStaffId: staffId },
     });
   }
 
-  static async markPaid(orgId: string, jobId: string, reference?: string) {
+  // ✅ RENAMED: markPaid → confirmPayment (domain correct)
+  static async confirmPayment(
+    orgId: string,
+    jobId: string,
+    reference?: string,
+  ) {
     return prisma.job.update({
-      where: { id: jobId },
+      where: { id: jobId, orgId },
       data: {
         paymentStatus: "PAID",
         isPaid: true,
