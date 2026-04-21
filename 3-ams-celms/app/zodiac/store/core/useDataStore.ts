@@ -8,6 +8,7 @@ import { createDraftSlice } from "../slices/draft.slice";
 import { createStaffSlice } from "../slices/staff.slice";
 import { createPaymentSlice } from "../slices/payment.slice";
 import { createDeliverySlice } from "../slices/delivery.slice";
+import { createB2BSlice } from "../slices/b2b.slice";
 
 export const useDataStore = create(
   persist(
@@ -19,6 +20,7 @@ export const useDataStore = create(
       ...createJobSlice(set, get, api),
       ...createStaffSlice(set, get, api),
       ...createPaymentSlice(set, get, api),
+      ...createB2BSlice(set, get, api), // optional if you implement later
 
       // ✅ DELIVERY SLICE ADDED
       ...createDeliverySlice(set, get, api),

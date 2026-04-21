@@ -103,6 +103,17 @@ export function useRealtimeSync() {
           break;
 
         // ─────────────────────────────
+        // B2B DOMAIN (NEW)
+        // ─────────────────────────────
+        case "b2b.pushed":
+          store.addB2B?.(data);
+          break;
+
+        case "b2b.updated":
+          store.updateB2B?.(data.id, data);
+          break;
+
+        // ─────────────────────────────
         // DEV SAFETY
         // ─────────────────────────────
         default:
