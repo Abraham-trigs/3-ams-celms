@@ -64,6 +64,10 @@ export class JobService {
           totalJobs: {
             increment: 1,
           },
+
+          // ✅ ADD THESE (important UX + analytics consistency)
+          lastStaffId: assignedStaffId ?? undefined,
+          mostPrintedServiceId: service.id,
         },
       });
 

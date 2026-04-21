@@ -1,6 +1,5 @@
 import { apiHandler } from "@/server/core/apiHandler";
 import { clientService } from "@/server/services/client.service";
-import { eventBus } from "@/server/events/eventBus";
 
 // GET
 export const GET = apiHandler(async ({ orgId, query, pagination }) => {
@@ -18,11 +17,6 @@ export const POST = apiHandler(
     const client = await clientService.create({
       ...body,
       orgId,
-    });
-
-    eventBus.publish("client.created", client, {
-      orgId,
-      entityId: client.id,
     });
 
     return client;

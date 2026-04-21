@@ -2,13 +2,13 @@ import { prisma } from "@/lib/db/prisma";
 import { eventBus } from "@/server/events/eventBus";
 
 export async function processOutbox() {
-  // 1. Atomically claim events (prevents double workers picking same rows)
+  // 1. Claim events safely
   await prisma.outboxEvent.updateMany({
     where: { status: "PENDING" },
     data: { status: "PROCESSING" },
   });
 
-  // 2. Fetch claimed events
+  // 2. Fetch batch
   const events = await prisma.outboxEvent.findMany({
     where: { status: "PROCESSING" },
     take: 50,
@@ -17,8 +17,11 @@ export async function processOutbox() {
 
   for (const event of events) {
     try {
-      // publish to realtime/event system
-      eventBus.publish(event.type, event.payload);
+      eventBus.publish(event.type, event.payload, {
+        orgId: event.orgId,
+        entityId: event.entityId,
+        version: event.version,
+      });
 
       await prisma.outboxEvent.update({
         where: { id: event.id },

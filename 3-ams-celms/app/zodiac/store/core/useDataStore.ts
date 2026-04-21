@@ -7,6 +7,7 @@ import { createJobSlice } from "../slices/job.slice";
 import { createDraftSlice } from "../slices/draft.slice";
 import { createStaffSlice } from "../slices/staff.slice";
 import { createPaymentSlice } from "../slices/payment.slice";
+import { createDeliverySlice } from "../slices/delivery.slice";
 
 export const useDataStore = create(
   persist(
@@ -19,14 +20,24 @@ export const useDataStore = create(
       ...createStaffSlice(set, get, api),
       ...createPaymentSlice(set, get, api),
 
+      // ✅ DELIVERY SLICE ADDED
+      ...createDeliverySlice(set, get, api),
+
       initData: async () => {
-        const { loadPrices, loadInventory, loadJobs, loadStaff } = get();
+        const {
+          loadPrices,
+          loadInventory,
+          loadJobs,
+          loadStaff,
+          loadDeliveries,
+        } = get();
 
         await Promise.all([
           loadPrices?.(),
           loadInventory?.(),
           loadJobs?.(),
           loadStaff?.(),
+          loadDeliveries?.(), // optional if you implement later
         ]);
       },
     }),

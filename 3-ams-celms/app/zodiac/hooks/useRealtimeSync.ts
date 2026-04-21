@@ -34,7 +34,6 @@ export function useRealtimeSync() {
           break;
 
         case "job.staff_assigned":
-          // ⚠️ treat as projection only (safe merge)
           store.updateJob(data.id, {
             assignedStaffId: data.assignedStaffId,
             assignedStaffSnapshot: data.assignedStaffSnapshot,
@@ -75,9 +74,25 @@ export function useRealtimeSync() {
           break;
 
         case "staff.assigned":
-          // ✔ single source rule: backend already defines status
           store.assignCurrentJob?.(data.staffId, data.jobId);
           store.setStaffStatus?.(data.staffId, data.status);
+          break;
+
+        // ─────────────────────────────
+        // DELIVERY DOMAIN (NEW)
+        // ─────────────────────────────
+        case "delivery.created":
+          store.addDelivery?.(data);
+          break;
+
+        case "delivery.updated":
+          store.updateDelivery?.(data.id, data);
+          break;
+
+        case "delivery.status.updated":
+          store.updateDelivery?.(data.id, {
+            status: data.status,
+          });
           break;
       }
     });
