@@ -10,19 +10,32 @@ export function useRealtimeSync() {
   useEffect(() => {
     const unsubscribe = createRealtimeClient((event) => {
       const store = useDataStore.getState();
+      const { entityId, version = 0, type, payload: data } = event;
 
-      const entityId = event.entityId;
-      const version = event.version ?? 0;
+      // ─────────────────────────────
+      // STALE UPDATE GUARD
+      // ─────────────────────────────
+      if (entityId) {
+        const last = lastVersionMap.current[entityId] ?? -1;
+        if (last >= version) return;
+        lastVersionMap.current[entityId] = version;
+      }
 
-      // ❌ reject stale updates
-      if (lastVersionMap.current[entityId] >= version) return;
-      lastVersionMap.current[entityId] = version;
-
-      const data = event.payload;
-
-      switch (event.type) {
+      switch (type) {
         // ─────────────────────────────
-        // JOB DOMAIN (source of truth = JobService)
+        // COMPANY DOMAIN (NEW)
+        // ─────────────────────────────
+        case "company.created":
+          store.setCompany?.(data); // or store.addCompany
+          break;
+
+        case "company.location.updated":
+        case "company.activated":
+          store.updateCompany?.(data.id, data);
+          break;
+
+        // ─────────────────────────────
+        // JOB DOMAIN
         // ─────────────────────────────
         case "job.created":
           store.addJob(data);
@@ -79,7 +92,7 @@ export function useRealtimeSync() {
           break;
 
         // ─────────────────────────────
-        // DELIVERY DOMAIN (NEW)
+        // DELIVERY DOMAIN
         // ─────────────────────────────
         case "delivery.created":
           store.addDelivery?.(data);
@@ -89,11 +102,11 @@ export function useRealtimeSync() {
           store.updateDelivery?.(data.id, data);
           break;
 
-        case "delivery.status.updated":
-          store.updateDelivery?.(data.id, {
-            status: data.status,
-          });
-          break;
+        // ─────────────────────────────
+        // DEV SAFETY
+        // ─────────────────────────────
+        default:
+          console.debug(`[Realtime] Unhandled event: ${type}`);
       }
     });
 
