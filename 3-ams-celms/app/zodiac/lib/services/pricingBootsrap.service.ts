@@ -1,37 +1,61 @@
-import { prisma } from "@/lib/prisma";
+import { StockRepository } from "@/lib/repositories/stock.repository";
+import { UnitOfWork } from "@/lib/db/unitOfWork";
+import { Outbox } from "@/lib/db/outbox";
 
-export class PricingBootstrapService {
-  async createInitialPriceList(input: {
-    companyId: string;
-    name: string;
-    items: {
-      serviceName: string;
-      unitPrice: number;
-    }[];
+export class StockService {
+  static async restock(params: {
+    orgId: string;
+    stockItemId: string;
+    quantity: number;
+    unitCost: number;
   }) {
-    return prisma.$transaction(async (tx) => {
-      // prevent duplicate active price list for tenant
-      const existing = await tx.priceList.findFirst({
-        where: {
-          companyId: input.companyId,
-          isActive: true,
-        },
+    return UnitOfWork.run(async (tx) => {
+      const res = await StockRepository.restock(
+        params.orgId,
+        params.stockItemId,
+        params.quantity,
+        params.unitCost,
+        tx,
+      );
+
+      await Outbox.add(tx, {
+        type: "stock.restocked",
+        orgId: params.orgId,
+        payload: res,
       });
 
-      if (existing) {
-        return existing;
-      }
-
-      return tx.priceList.create({
-        data: {
-          companyId: input.companyId,
-          name: input.name,
-          isActive: true,
-          items: {
-            create: input.items,
-          },
-        },
-      });
+      return res;
     });
+  }
+
+  static async deduct(params: {
+    orgId: string;
+    stockItemId: string;
+    amount: number;
+  }) {
+    return UnitOfWork.run(async (tx) => {
+      const res = await StockRepository.deduct(
+        params.orgId,
+        params.stockItemId,
+        params.amount,
+        tx,
+      );
+
+      await Outbox.add(tx, {
+        type: "stock.updated",
+        orgId: params.orgId,
+        payload: res,
+      });
+
+      return res;
+    });
+  }
+
+  static async list(orgId: string) {
+    return StockRepository.list(orgId);
+  }
+
+  static async findById(orgId: string, id: string) {
+    return StockRepository.findById(orgId, id);
   }
 }
