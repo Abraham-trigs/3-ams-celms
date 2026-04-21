@@ -1,7 +1,5 @@
-// lib/services/payment.service.ts
-
-import { prisma } from "@/lib/db/prisma";
-import { JobRepository } from "@/lib/repositories/job.repository";
+import { UnitOfWork } from "@/lib/db/unitOfWork";
+import { Outbox } from "@/lib/db/outbox";
 
 export class PaymentService {
   static async confirmPayment(params: {
@@ -14,9 +12,8 @@ export class PaymentService {
   }) {
     const { orgId, jobId, amount, method, reference, confirmedBy } = params;
 
-    return prisma.$transaction(async (tx) => {
-      // 1. Record payment
-      await tx.payment.create({
+    return UnitOfWork.run(async (tx) => {
+      const payment = await tx.payment.create({
         data: {
           orgId,
           jobId,
@@ -27,7 +24,6 @@ export class PaymentService {
         },
       });
 
-      // 2. Mark job as paid
       const job = await tx.job.update({
         where: { id: jobId },
         data: {
@@ -35,6 +31,12 @@ export class PaymentService {
           paymentStatus: "PAID",
           paymentRef: reference,
         },
+      });
+
+      await Outbox.add(tx, {
+        type: "payment.confirmed",
+        orgId,
+        payload: { payment, job },
       });
 
       return job;

@@ -1,4 +1,3 @@
-// lib/hubtel.ts
 export const sendZodiacSMS = async (to: string, message: string) => {
   const credentials = Buffer.from(
     `${process.env.HUBTEL_CLIENT_ID}:${process.env.HUBTEL_CLIENT_SECRET}`,
@@ -12,7 +11,7 @@ export const sendZodiacSMS = async (to: string, message: string) => {
     },
     body: JSON.stringify({
       from: process.env.HUBTEL_SENDER_ID,
-      to: to,
+      to,
       content: message,
       registeredDelivery: true,
     }),

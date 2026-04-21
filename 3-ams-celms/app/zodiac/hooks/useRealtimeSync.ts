@@ -11,10 +11,9 @@ export function useRealtimeSync() {
     const unsubscribe = createRealtimeClient((event) => {
       const store = useDataStore.getState();
 
-      // basic dedupe (prevents double-processing from reconnects)
       const eventKey = `${event.type}:${event.payload?.id ?? ""}`;
-
       if (handledEvents.current.has(eventKey)) return;
+
       handledEvents.current.add(eventKey);
 
       switch (event.type) {
@@ -28,12 +27,31 @@ export function useRealtimeSync() {
           store.updateJob(event.payload.id, event.payload);
           break;
 
+        case "payment.confirmed":
+          store.updateJob(event.payload.job.id, {
+            isPaid: true,
+            paymentStatus: "PAID",
+            paymentRef: event.payload.job.paymentRef,
+          });
+          break;
+
         case "stock.updated":
-          store.consumeStock(event.payload.id, event.payload.qty);
+          store.consumeStock(
+            event.payload.id,
+            event.payload.totalRemaining ?? event.payload.qty,
+          );
+          break;
+
+        case "stock.restocked":
+          store.restockStock?.(
+            event.payload.id,
+            event.payload.totalRemaining,
+            event.payload.lastUnitCost,
+          );
           break;
 
         case "price.updated":
-          store.updatePrice(event.payload.id, event.payload.priceGHS);
+          store.updatePrice(event.payload.id, event.payload.unitPrice);
           break;
 
         default:
