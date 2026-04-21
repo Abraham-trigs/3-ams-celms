@@ -15,8 +15,14 @@ export class StockRepository {
   }
 
   static async deduct(orgId: string, stockItemId: string, amount: number) {
-    return prisma.stockItem.update({
+    const item = await prisma.stockItem.findFirst({
       where: { id: stockItemId, orgId },
+    });
+
+    if (!item) throw new Error("Stock item not found");
+
+    return prisma.stockItem.update({
+      where: { id: stockItemId },
       data: {
         totalRemaining: {
           decrement: amount,
@@ -31,8 +37,14 @@ export class StockRepository {
     quantity: number,
     unitCost: number,
   ) {
-    return prisma.stockItem.update({
+    const item = await prisma.stockItem.findFirst({
       where: { id: stockItemId, orgId },
+    });
+
+    if (!item) throw new Error("Stock item not found");
+
+    return prisma.stockItem.update({
+      where: { id: stockItemId },
       data: {
         totalRemaining: {
           increment: quantity,

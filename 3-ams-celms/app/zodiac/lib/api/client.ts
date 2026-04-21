@@ -27,19 +27,9 @@ export const apiClient = async <T = any>(
   url: string,
   options: ApiOptions = {},
 ): Promise<T> => {
-  /**
-   * 🔐 Client-side auth resolver
-   * Reads token + org context from browser storage.
-   * Safe for Next.js App Router (prevents SSR crashes).
-   * Replace with secure auth provider (cookies / NextAuth / Clerk) when scaling.
-   */
   const token = getClientStorage("token");
-  const orgId = getClientStorage("orgId");
 
-  const queryString = buildQuery({
-    orgId: orgId || undefined,
-    ...(options.query || {}),
-  });
+  const queryString = buildQuery(options.query);
 
   const res = await fetch(`${url}${queryString}`, {
     ...options,
@@ -58,5 +48,5 @@ export const apiClient = async <T = any>(
     throw new Error(error?.error || "Request failed");
   }
 
-  return res.json() as Promise<T>;
+  return res.json();
 };

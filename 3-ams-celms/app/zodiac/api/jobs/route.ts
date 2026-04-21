@@ -1,40 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
+import { apiHandler } from "@/server/core/apiHandler";
 import { JobService } from "@/server/services/job.service";
 import { eventBus } from "@/server/events/eventBus";
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-
-  const orgId = searchParams.get("orgId");
-  const page = Number(searchParams.get("page") || 1);
-  const perPage = Number(searchParams.get("perPage") || 20);
-
-  if (!orgId) {
-    return NextResponse.json({ error: "orgId is required" }, { status: 400 });
-  }
-
+// GET (clean pagination already handled by kernel)
+export const GET = apiHandler(async ({ orgId }) => {
   const data = await JobService.loadJobs(orgId);
 
-  return NextResponse.json({
-    data,
-    meta: { page, perPage },
-  });
-}
+  return data;
+});
 
 // POST
-
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json();
-
-    const orgId = req.headers.get("x-org-id");
-    if (!orgId) {
-      return NextResponse.json(
-        { error: "Missing org context" },
-        { status: 401 },
-      );
-    }
-
+export const POST = apiHandler(
+  async ({ orgId, body }) => {
     const job = await JobService.createJob({
       ...body,
       orgId,
@@ -43,14 +20,12 @@ export async function POST(req: NextRequest) {
     eventBus.publish({
       type: "job.created",
       payload: job,
-      meta: {
-        source: "server",
-        orgId,
-      },
+      meta: { source: "server", orgId },
     });
 
-    return NextResponse.json({ data: job }, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
-  }
-}
+    return job;
+  },
+  {
+    requireOrg: true,
+  },
+);

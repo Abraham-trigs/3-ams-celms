@@ -1,13 +1,14 @@
 import { StateCreator } from "zustand";
 import { PriceItem } from "@zodiac/types/zodiac.types";
-import { priceSync } from "@zodiac/lib/api/sync/price.sync";
+import { apiClient } from "@zodiac/lib/api/client";
 
 export interface PriceSlice {
   prices: PriceItem[];
+
   setPrices: (data: PriceItem[]) => void;
   updatePrice: (id: string, price: number) => void;
 
-  loadPrices: () => Promise<void>;
+  loadPrices: (orgId: string) => Promise<void>;
 }
 
 export const createPriceSlice: StateCreator<PriceSlice> = (set) => ({
@@ -22,14 +23,13 @@ export const createPriceSlice: StateCreator<PriceSlice> = (set) => ({
       ),
     })),
 
-  loadPrices: async () => {
-    const orgId = "CURRENT_ORG"; // replace later with auth store
+  loadPrices: async (orgId) => {
+    const res = await apiClient<{ data: PriceItem[] }>("/api/prices", {
+      query: { orgId },
+    });
 
-    const res = await priceSync.list(orgId);
-
-    // API returns: { data }
-    const data = res?.data?.data ?? [];
-
-    set({ prices: data });
+    set({
+      prices: res?.data ?? [],
+    });
   },
 });

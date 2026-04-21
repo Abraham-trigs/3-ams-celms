@@ -14,12 +14,23 @@ export const priceService = {
   },
 
   async updatePrice(serviceId: string, price: number, orgId: string) {
-    return prisma.priceItem.updateMany({
+    // tenant ownership check
+    const existing = await prisma.priceItem.findFirst({
       where: {
         id: serviceId,
         priceList: {
           companyId: orgId,
         },
+      },
+    });
+
+    if (!existing) {
+      throw new Error("Price item not found");
+    }
+
+    return prisma.priceItem.update({
+      where: {
+        id: serviceId,
       },
       data: {
         unitPrice: price,

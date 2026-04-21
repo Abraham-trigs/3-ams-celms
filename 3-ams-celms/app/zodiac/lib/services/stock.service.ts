@@ -1,5 +1,3 @@
-// lib/services/stock.service.ts
-
 import { StockRepository } from "@/lib/repositories/stock.repository";
 
 export class StockService {
@@ -27,5 +25,13 @@ export class StockService {
       params.stockItemId,
       params.amount,
     );
+  }
+
+  static async list(orgId: string) {
+    return StockRepository.list(orgId);
+  }
+
+  static async findById(orgId: string, id: string) {
+    return StockRepository.findById(orgId, id);
   }
 }

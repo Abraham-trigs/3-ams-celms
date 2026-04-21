@@ -1,12 +1,14 @@
 import { StateCreator } from "zustand";
 import { StockItem } from "../../types/zodiac.types";
-import { addStock, subtractStock } from "../../store/domains/inventory.engine";
 
 export interface InventorySlice {
   inventory: StockItem[];
+
   setInventory: (data: StockItem[]) => void;
-  restock: (id: string, qty: number, cost: number) => void;
-  consumeStock: (id: string, qty: number) => void;
+
+  // UI-only optimistic updates
+  restockLocal: (id: string, qty: number, cost: number) => void;
+  consumeLocal: (id: string, qty: number) => void;
 }
 
 export const createInventorySlice: StateCreator<InventorySlice> = (set) => ({
@@ -14,17 +16,28 @@ export const createInventorySlice: StateCreator<InventorySlice> = (set) => ({
 
   setInventory: (data) => set({ inventory: data }),
 
-  restock: (id, qty, cost) =>
+  restockLocal: (id, qty, cost) =>
     set((state) => ({
       inventory: state.inventory.map((i) =>
-        i.id === id ? addStock(i, qty, cost) : i,
+        i.id === id
+          ? {
+              ...i,
+              totalRemaining: i.totalRemaining + qty,
+              lastUnitCost: cost,
+            }
+          : i,
       ),
     })),
 
-  consumeStock: (id, qty) =>
+  consumeLocal: (id, qty) =>
     set((state) => ({
       inventory: state.inventory.map((i) =>
-        i.id === id ? subtractStock(i, qty) : i,
+        i.id === id
+          ? {
+              ...i,
+              totalRemaining: Math.max(0, i.totalRemaining - qty),
+            }
+          : i,
       ),
     })),
 });
