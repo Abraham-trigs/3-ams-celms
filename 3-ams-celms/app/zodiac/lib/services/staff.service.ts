@@ -1,80 +1,62 @@
 import { prisma } from "@/lib/db/prisma";
-import { JobRepository } from "@zodiac/lib/repositories/job.repository";
-import { StockRepository } from "@zodiac/lib/repositories/stock.repository";
-import { PriceItem } from "@zodiac/types/zodiac.types";
+import { StaffRepository } from "@/lib/repositories/staff.repository";
+import { Outbox } from "@/lib/db/outbox";
+import { StaffStatus } from "@/types/zodiac.types";
 
-export class JobService {
-  /**
-   * CREATE JOB (source of truth)
-   */
-  static async createJob(params: {
+export class StaffService {
+  static async list(orgId: string) {
+    return StaffRepository.list(orgId);
+  }
+
+  static async assignToJob(params: {
     orgId: string;
-    clientId: string;
-    service: PriceItem;
-    quantity: number;
-    width?: number;
-    height?: number;
-    assignedStaffId?: string;
-    notes?: string;
+    jobId: string;
+    staffId: string;
   }) {
-    const {
-      orgId,
-      clientId,
-      service,
-      quantity,
-      width,
-      height,
-      assignedStaffId,
-      notes,
-    } = params;
+    const { orgId, jobId, staffId } = params;
 
     return prisma.$transaction(async (tx) => {
-      const isLargeFormat = service.unit === "sqft" || service.unit === "sqm";
+      const staff = await StaffRepository.assignJob(orgId, staffId, jobId, tx);
 
-      const units = isLargeFormat ? (width || 1) * (height || 1) : 1;
-
-      const totalPrice = units * quantity * service.priceGHS;
-
-      // ⚠️ NOTE: still using repository (non-tx safe for now)
-      if (service.stock_ref) {
-        await StockRepository.deduct(
-          orgId,
-          service.stock_ref,
-          units * quantity,
-        );
-      }
-
-      const job = await JobRepository.create({
+      await Outbox.add(tx, {
+        type: "staff.assigned",
         orgId,
-        clientId,
-        serviceId: service.id,
-        serviceName: service.name,
-        quantity,
-        width,
-        height,
-        unit: service.unit,
-        totalPrice,
-        assignedStaffId,
-        notes,
+        payload: {
+          staffId,
+          jobId,
+          status: "BUSY", // derived state for UI sync
+        },
       });
 
-      return job;
+      return staff;
     });
   }
 
-  static async updateStatus(orgId: string, jobId: string, status: any) {
-    return JobRepository.updateStatus(orgId, jobId, status);
-  }
+  static async setStatus(params: {
+    orgId: string;
+    staffId: string;
+    status: StaffStatus;
+  }) {
+    const { orgId, staffId, status } = params;
 
-  static async assignStaff(orgId: string, jobId: string, staffId: string) {
-    return JobRepository.assignStaff(orgId, jobId, staffId);
-  }
+    return prisma.$transaction(async (tx) => {
+      const staff = await StaffRepository.updateStatus(
+        orgId,
+        staffId,
+        status,
+        tx,
+      );
 
-  static async confirmPayment(orgId: string, jobId: string, ref: string) {
-    return JobRepository.confirmPayment(orgId, jobId, ref);
-  }
+      await Outbox.add(tx, {
+        type: "staff.status.updated",
+        orgId,
+        payload: {
+          staffId,
+          status,
+        },
+      });
 
-  static async loadJobs(orgId: string) {
-    return JobRepository.list(orgId);
+      return staff;
+    });
   }
 }

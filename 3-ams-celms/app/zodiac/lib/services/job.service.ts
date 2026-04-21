@@ -1,5 +1,5 @@
-import { JobRepository } from "@zodiac/lib/repositories/job.repository";
-import { StockRepository } from "@zodiac/lib/repositories/stock.repository";
+import { JobRepository } from "@/app/zodiac/lib/repositories/job.repository";
+import { StockRepository } from "@/app/zodiac/lib/repositories/stock.repository";
 import { PriceItem } from "@zodiac/types/zodiac.types";
 import { UnitOfWork } from "@/lib/db/unitOfWork";
 import { Outbox } from "@/lib/db/outbox";

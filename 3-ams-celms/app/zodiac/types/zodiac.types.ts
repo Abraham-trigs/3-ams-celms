@@ -63,13 +63,19 @@ export interface AppUser {
 export interface StaffMember {
   id: string;
   orgId: string;
-  userId: string; // → AppUser.id
+  userId: string;
   name: string;
   role: UserRole;
   phone?: string;
   avatarUrl?: string;
-  specialisation?: string; // e.g. "Large Format", "Finishing"
+  specialisation?: string;
+
   isActive: boolean;
+
+  // NEW (safe, non-breaking)
+  currentJobId?: string;
+  status?: StaffStatus;
+
   createdAt: string;
 }
 
@@ -79,6 +85,20 @@ export interface StaffSummary {
   name: string;
   avatarUrl?: string;
   role: UserRole;
+
+  // NEW for dashboards
+  status?: StaffStatus;
+  currentJobId?: string;
+}
+
+export type StaffStatus = "ONLINE" | "BUSY" | "OFFLINE";
+
+export interface StaffPresence {
+  staffId: string;
+  orgId: string;
+  status: StaffStatus;
+  activeJobId?: string;
+  lastSeenAt: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
