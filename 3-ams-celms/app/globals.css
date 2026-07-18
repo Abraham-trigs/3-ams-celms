@@ -3,7 +3,7 @@
 :root {
   /* 3-AMS-CELMS brand colors — unchanged */
   --color-background: #f2f2f2; /* Light background */
-  --color-primary: #014987;
+  --color-primary: #bb890b;
   --color-primary-hover: #236aa9;
   --color-secondary: #990a58;
   --color-secondary-hover: #660033;
@@ -11,8 +11,8 @@
   --color-text-secondary: #4b5563; /* Tailwind gray-700 */
 
   /* Font stack for corporate/business site */
-  --font-sans: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --font-mono: 'Fira Code', monospace;
+  --font-sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "Fira Code", monospace;
 }
 
 /* Optional theme mapping (inline theme support) */
@@ -27,7 +27,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --color-background: #f2f2f2;
-    --color-primary: #236aa9;
+    --color-primary: #0f028c;
     --color-primary-hover: #014987;
     --color-secondary: #660033;
     --color-secondary-hover: #990a58;
@@ -37,14 +37,20 @@
 }
 
 @keyframes blink {
-  0%, 50%, 100% { opacity: 1; }
-  25%, 75% { opacity: 0; }
+  0%,
+  50%,
+  100% {
+    opacity: 1;
+  }
+  25%,
+  75% {
+    opacity: 0;
+  }
 }
 
 .animate-blink {
   animation: blink 1s step-start infinite;
 }
-
 
 body {
   background: var(--color-background);
